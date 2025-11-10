@@ -52,8 +52,25 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-CORS_ALLOWED_ORIGINS = [
-    'http://localhost:5173',
+# Development - allow everything
+# TODO: THIS IS HORRIBLE FOR SECURITY, CHANGE BEFORE PROD!!
+CORS_ALLOW_ALL_ORIGINS = True
+
+# CORS_ALLOWED_ORIGINS = [
+#      "http://localhost:5173",  # vite default
+#      "http://localhost:8080",  # vue CLI
+# ]
+
+CORS_ALLOW_METHODS = [
+    'GET',
+    'POST',
+    'PUT',
+    'PATCH',
+    'DELETE',
+]
+
+CORS_ALLOW_HEADERS = [
+    'content-type',
 ]
 
 ROOT_URLCONF = 'backend.urls'
