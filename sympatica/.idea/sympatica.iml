@@ -13,8 +13,8 @@
     </facet>
   </component>
   <component name="NewModuleRootManager">
-    <content url="file://$MODULE_DIR$/../sympatica" />
-    <orderEntry type="jdk" jdkName="/opt/homebrew/Caskroom/miniconda/base" jdkType="Python SDK" />
+    <content url="file://$MODULE_DIR$" />
+    <orderEntry type="jdk" jdkName="Python 3.14 virtualenv at ~/Documents/uni/ecs639-webdev/cwindividual/.venv" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
   <component name="PyDocumentationSettings">
