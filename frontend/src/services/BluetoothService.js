@@ -1,9 +1,11 @@
+// services/BluetoothService.js
+import DataParser from './DataParser.js';
+
 class BluetoothService {
     constructor() {
         this.device = null;
         this.server = null;
         this.isConnected = false;
-        this.onReadingCallback = null;
 
         // YOUR CUSTOM LIBRARY INSTANCE HERE
         // this.customDevice = new YourCustomLibrary();
@@ -11,22 +13,17 @@ class BluetoothService {
 
     async connect() {
         try {
-            // REQUEST DEVICE
             this.device = await navigator.bluetooth.requestDevice({
-                // TODO: Add your device filters here
                 filters: [
-                    { name: 'YOUR_DEVICE_NAME' },
-                    // { services: ['YOUR_SERVICE_UUID'] }
+                    { name: 'YOUR_DEVICE_NAME' }
                 ],
                 optionalServices: [
-                    // 'YOUR_SERVICE_UUID_1',
-                    // 'YOUR_SERVICE_UUID_2',
+                    'YOUR_SERVICE_UUID'
                 ]
             });
 
             console.log('Device selected:', this.device.name);
 
-            // CONNECT TO GATT SERVER
             this.server = await this.device.gatt.connect();
             console.log('Connected to GATT server');
 
@@ -34,8 +31,6 @@ class BluetoothService {
             // await this.customDevice.init(this.server);
 
             this.isConnected = true;
-
-            // Listen for disconnection
             this.device.addEventListener('gattserverdisconnected', this.onDisconnected.bind(this));
 
             return {
@@ -59,14 +54,27 @@ class BluetoothService {
         }
 
         try {
-            // TODO: Start reading from your device using custom library
-            // Example structure:
+            // TODO: Setup your characteristic notifications
+            // Example structure (adapt to your library):
 
-            // await this.customDevice.startStreaming();
-            // this.customDevice.onData((data) => {
-            //   if (this.onReadingCallback) {
-            //     this.onReadingCallback(data);
-            //   }
+            // BVP
+            // await this.customDevice.startNotify('BVP_UUID', (data) => {
+            //   DataParser.parseBVP(data);
+            // });
+
+            // Temperature
+            // await this.customDevice.startNotify('TEMP_UUID', (data) => {
+            //   DataParser.parseTemperature(data);
+            // });
+
+            // EDA
+            // await this.customDevice.startNotify('EDA_UUID', (data) => {
+            //   DataParser.parseEDA(data);
+            // });
+
+            // Accelerometer
+            // await this.customDevice.startNotify('ACC_UUID', (data) => {
+            //   DataParser.parseAccelerometer(data);
             // });
 
             console.log('Started reading from device');
@@ -83,8 +91,8 @@ class BluetoothService {
         }
 
         try {
-            // TODO: Stop reading from your device
-            // await this.customDevice.stopStreaming();
+            // TODO: Stop notifications
+            // await this.customDevice.stopNotify();
 
             console.log('Stopped reading from device');
 
@@ -107,16 +115,7 @@ class BluetoothService {
     onDisconnected() {
         console.log('Device disconnected');
         this.isConnected = false;
-        // TODO: Handle disconnection in UI
     }
-
-    onReading(callback) {
-        this.onReadingCallback = callback;
-    }
-
-    // TODO: Add methods for your specific device operations
-    // async getBatteryLevel() { ... }
-    // async getDeviceInfo() { ... }
 }
 
 export default new BluetoothService();

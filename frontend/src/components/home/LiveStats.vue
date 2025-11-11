@@ -53,7 +53,12 @@
 </template>
 
 <script>
+import DataParser from '../../services/DataParser.js';
+
 export default {
+  props: {
+    activeSessionId: Number
+  },
   data() {
     return {
       readings: {
@@ -67,18 +72,36 @@ export default {
     }
   },
   mounted() {
-    this.simulateReadings();
+    DataParser.onData(this.handleReading);
+  },
+  watch: {
+    activeSessionId(newSessionId) {
+      if (newSessionId) {
+        DataParser.setSession(newSessionId);
+        console.log('DataParser now saving to session:', newSessionId);
+      } else {
+        DataParser.setSession(null);
+      }
+    }
   },
   methods: {
-    simulateReadings() {
-      setInterval(() => {
-        this.readings.bvp = (Math.random() * 100).toFixed(2);
-        this.readings.temperature = (36 + Math.random() * 2).toFixed(1);
-        this.readings.eda = (Math.random() * 10).toFixed(2);
-        this.readings.acc_x = (Math.random() * 2 - 1).toFixed(2);
-        this.readings.acc_y = (Math.random() * 2 - 1).toFixed(2);
-        this.readings.acc_z = (Math.random() * 2 - 1).toFixed(2);
-      }, 1000);
+    handleReading(reading) {
+      switch(reading.type) {
+        case 'bvp':
+          this.readings.bvp = reading.value.toFixed(2);
+          break;
+        case 'temperature':
+          this.readings.temperature = reading.value.toFixed(1);
+          break;
+        case 'eda':
+          this.readings.eda = reading.value.toFixed(2);
+          break;
+        case 'acc':
+          this.readings.acc_x = reading.value.x.toFixed(2);
+          this.readings.acc_y = reading.value.y.toFixed(2);
+          this.readings.acc_z = reading.value.z.toFixed(2);
+          break;
+      }
     }
   }
 }

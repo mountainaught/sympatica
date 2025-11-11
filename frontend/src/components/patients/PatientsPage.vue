@@ -9,22 +9,33 @@
             :selectedPatientId="selectedPatient?.patient_id"
             @select-patient="selectPatient"
             @create-patient="openCreatePatientModal"
-            @delete-patient="openDeleteModal" />
+            @delete-patient="openDeletePatientModal" />
 
         <SessionsPanel
             :patient="selectedPatient"
-            :sessions="sessions" />
+            :sessions="sessions"
+            :activeSessionId="activeSession?.id"
+            @create-session="openCreateSessionModal"
+            @delete-session="openDeleteSessionModal"
+            @set-active-session="setActiveSession" />
       </div>
     </div>
 
-    <!-- Modal Component -->
     <CreatePatientModal
-        ref="createModal"
+        ref="createPatientModal"
         @patient-created="onPatientCreated" />
 
     <DeleteConfirmModal
-        ref="deleteModal"
+        ref="deletePatientModal"
         @confirm-delete="deletePatient" />
+
+    <CreateSessionModal
+        ref="createSessionModal"
+        @session-created="onSessionCreated" />
+
+    <DeleteSessionModal
+        ref="deleteSessionModal"
+        @confirm-delete="deleteSession" />
   </div>
 </template>
 
@@ -34,6 +45,8 @@ import PatientsList from './PatientsList.vue';
 import SessionsPanel from './SessionsPanel.vue';
 import CreatePatientModal from './CreatePatientModal.vue';
 import DeleteConfirmModal from './DeleteConfirmModal.vue';
+import CreateSessionModal from './CreateSessionModal.vue';
+import DeleteSessionModal from './DeleteSessionModal.vue';
 
 export default {
   components: {
@@ -41,7 +54,12 @@ export default {
     PatientsList,
     SessionsPanel,
     CreatePatientModal,
-    DeleteConfirmModal  // ← add this
+    DeleteConfirmModal,
+    CreateSessionModal,
+    DeleteSessionModal
+  },
+  props: {
+    activeSession: Object
   },
   data() {
     return {
@@ -57,7 +75,8 @@ export default {
     async loadPatients() {
       try {
         const response = await fetch('http://localhost:8000/api/patients/');
-        this.patients = await response.json();
+        const data = await response.json();
+        this.patients = data;
 
         for (let patient of this.patients) {
           const sessionsResponse = await fetch(`http://localhost:8000/api/sessions/?patient_id=${patient.patient_id}`);
@@ -74,13 +93,27 @@ export default {
       await this.loadSessions(patient.patient_id);
     },
 
-    openDeleteModal(patient) {
-      this.$refs.deleteModal.show(patient);
+    async loadSessions(patientId) {
+      try {
+        const response = await fetch(`http://localhost:8000/api/sessions/?patient_id=${patientId}`);
+        const data = await response.json();
+        this.sessions = data;
+      } catch (error) {
+        console.error('Error loading sessions:', error);
+      }
+    },
+
+    openCreatePatientModal() {
+      this.$refs.createPatientModal.show();
+    },
+
+    openDeletePatientModal(patient) {
+      this.$refs.deletePatientModal.show(patient);
     },
 
     async deletePatient(patientId) {
       try {
-        const response = await fetch(`http://localhost:8000/api/patients/${patientId}/delete`, {
+        const response = await fetch(`http://localhost:8000/api/patients/${patientId}/`, {
           method: 'DELETE'
         });
 
@@ -90,7 +123,6 @@ export default {
 
         await this.loadPatients();
 
-        // Clear selection if deleted patient was selected
         if (this.selectedPatient?.patient_id === patientId) {
           this.selectedPatient = null;
           this.sessions = [];
@@ -101,28 +133,63 @@ export default {
       }
     },
 
-    async loadSessions(patientId) {
+    async onPatientCreated() {
+      await this.loadPatients();
+    },
+
+    openCreateSessionModal() {
+      if (!this.selectedPatient) return;
+      this.$refs.createSessionModal.show(this.selectedPatient.patient_id);
+    },
+
+    openDeleteSessionModal(session) {
+      this.$refs.deleteSessionModal.show(session);
+    },
+
+    async deleteSession(sessionId) {
       try {
-        const response = await fetch(`http://localhost:8000/api/sessions/?patient_id=${patientId}`);
-        this.sessions = await response.json();
+        const response = await fetch(`http://localhost:8000/api/sessions/${sessionId}/delete`, {
+          method: 'DELETE'
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to delete session');
+        }
+
+        if (this.activeSessionId === sessionId) {
+          this.$emit('set-active-session', null);
+        }
+
+        await this.loadSessions(this.selectedPatient.patient_id);
+        await this.loadPatients();
       } catch (error) {
-        console.error('Error loading sessions:', error);
+        console.error('Error deleting session:', error);
+        alert('Failed to delete session');
       }
     },
 
-    openCreatePatientModal() {
-      this.$refs.createModal.show();
+    async onSessionCreated() {
+      await this.loadSessions(this.selectedPatient.patient_id);
+      await this.loadPatients();
     },
 
-    async onPatientCreated() {
-      await this.loadPatients();
+    setActiveSession(sessionId) {
+      const session = this.sessions.find(s => s.id === sessionId);
+      if (session) {
+        const sessionData = {
+          ...session,
+          patient_name: this.selectedPatient.full_name,
+          patient_id: this.selectedPatient.patient_id
+        };
+        this.$emit('set-active-session', sessionData);
+      }
     }
   }
 }
 </script>
 
 <style scoped>
-@media (max-width: 900px) {
+@media (max-width: 768px) {
   .patients-container {
     flex-direction: column !important;
   }

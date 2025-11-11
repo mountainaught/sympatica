@@ -1,7 +1,14 @@
 <template>
   <div>
-    <HomePage v-if="currentPage === 'home'" @navigate="changePage" />
-    <PatientsPage v-if="currentPage === 'patients'" @navigate="changePage" />
+    <HomePage
+        v-if="currentPage === 'home'"
+        :activeSession="activeSession"
+        @navigate="changePage" />
+    <PatientsPage
+        v-if="currentPage === 'patients'"
+        :activeSession="activeSession"
+        @navigate="changePage"
+        @set-active-session="setActiveSession" />
   </div>
 </template>
 
@@ -16,12 +23,18 @@ export default {
   },
   data() {
     return {
-      currentPage: 'home'
+      currentPage: 'home',
+      activeSession: null  // now stores full session object
     }
   },
   methods: {
     changePage(page) {
       this.currentPage = page;
+    },
+
+    setActiveSession(sessionData) {
+      this.activeSession = sessionData;
+      console.log('Active session set:', sessionData);
     }
   }
 }
