@@ -7,13 +7,13 @@
             class="btn btn-lg rounded-pill shadow-sm"
             :class="currentPage === 'home' ? 'btn-primary' : 'btn-light'"
             @click="navigate('home')">
-          🏠 Home
+          Home
         </button>
         <button
             class="btn btn-lg rounded-pill shadow-sm"
             :class="currentPage === 'patients' ? 'btn-primary' : 'btn-light'"
             @click="navigate('patients')">
-          👥 Patients
+          Patients
         </button>
       </div>
     </div>

@@ -1,37 +1,57 @@
 <template>
   <div class="card shadow-lg border-0" style="flex: 1; border-radius: 20px; overflow: hidden;">
-    <div class="card-body p-4 d-flex flex-column">
-      <div class="d-flex justify-content-between align-items-center mb-3">
+    <div class="card-body p-4 d-flex flex-column h-100">
+      <div class="d-flex justify-content-between align-items-center mb-3 pb-3">
         <h3 class="fw-bold mb-0">Patients</h3>
-        <button class="btn btn-primary rounded-pill px-4" @click="$emit('create-patient')">
-          ➕ New Patient
+        <button class="btn btn-primary btn-sm rounded-pill px-3" @click="$emit('create-patient')">
+          + New Patient
         </button>
       </div>
 
-      <div class="flex-grow-1 overflow-auto">
-        <div class="list-group list-group-flush">
-          <button
+      <div class="flex-grow-1 overflow-auto patient-list">
+        <table class="table table-hover mb-0">
+          <thead class="sticky-top bg-white">
+          <tr class="border-bottom">
+            <th class="text-muted small fw-semibold py-2">NAME</th>
+            <th class="text-muted small fw-semibold py-2 text-end">SESSIONS</th>
+            <th class="text-muted small fw-semibold py-2 text-end" style="width: 40px;"></th>
+          </tr>
+          </thead>
+          <tbody>
+          <tr
               v-for="patient in patients"
               :key="patient.patient_id"
-              class="list-group-item list-group-item-action border-0 rounded-3 mb-2 patient-item"
-              :class="{ 'active': selectedPatientId === patient.patient_id }"
-              @click="$emit('select-patient', patient)">
-            <div class="d-flex justify-content-between align-items-center">
-              <div>
-                <h5 class="mb-1">{{ patient.full_name }}</h5>
-                <small class="text-muted">{{ patient.session_count }} sessions</small>
+              class="patient-row"
+              :class="{ 'table-active': selectedPatientId === patient.patient_id }"
+              @click="$emit('select-patient', patient)"
+              style="cursor: pointer;">
+            <td class="align-middle py-2">
+              <div class="d-flex flex-column">
+                <span class="fw-medium">{{ patient.full_name }}</span>
+                <small class="text-muted font-monospace" style="font-size: 0.75rem;">
+                  ID: {{ patient.patient_id.slice(0, 8) }}
+                </small>
               </div>
-              <div class="d-flex align-items-center gap-2">
-                <i class="bi bi-chevron-right chevron-icon"></i>
-                <button
-                    class="btn btn-danger btn-sm rounded-circle delete-btn"
-                    @click.stop="$emit('delete-patient', patient.patient_id)"
-                    title="Delete patient">
-                  🗑️
-                </button>
-              </div>
-            </div>
-          </button>
+            </td>
+            <td class="align-middle py-2 text-end">
+                <span class="badge bg-light text-dark rounded-pill px-2">
+                  {{ patient.session_count }}
+                </span>
+            </td>
+            <td class="align-middle py-2 text-end">
+              <button
+                  class="btn btn-danger btn-sm rounded-circle delete-btn"
+                  @click.stop="$emit('delete-patient', patient)"
+                  title="Delete patient">
+                ✖
+              </button>
+            </td>
+          </tr>
+          </tbody>
+        </table>
+
+        <div v-if="patients.length === 0" class="text-center text-muted py-5">
+          <p>No patients found</p>
         </div>
       </div>
     </div>
@@ -48,33 +68,41 @@ export default {
 </script>
 
 <style scoped>
-.list-group-item.active {
-  background-color: #667eea !important;
-  border-color: #667eea !important;
-  color: white;
+.patient-list {
+  overflow-y: auto;
+  max-height: 100%;
+  /* Hide scrollbar but keep scrolling */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
 }
 
-.patient-item {
-  position: relative;
+.patient-list::-webkit-scrollbar {
+  display: none; /* Chrome/Safari */
 }
 
-.delete-btn {
-  opacity: 0;
-  transition: opacity 0.2s;
-  width: 32px;
-  height: 32px;
-  padding: 0;
+.table thead th {
+  border-top: none;
+  border-bottom: 2px solid #dee2e6;
+  letter-spacing: 0.5px;
 }
 
-.patient-item:hover .delete-btn {
-  opacity: 1;
+.patient-row {
+  transition: background-color 0.15s ease;
 }
 
-.patient-item:hover .chevron-icon {
-  opacity: 0;
+.patient-row:hover {
+  background-color: #f8f9fa;
 }
 
-.chevron-icon {
-  transition: opacity 0.2s;
+.table-active {
+  background-color: #e7f3ff !important;
+}
+
+.patient-row td {
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.font-monospace {
+  font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
 }
 </style>

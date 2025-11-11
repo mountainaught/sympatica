@@ -9,7 +9,7 @@
             :selectedPatientId="selectedPatient?.patient_id"
             @select-patient="selectPatient"
             @create-patient="openCreatePatientModal"
-            @delete-patient="deletePatient" />
+            @delete-patient="openDeleteModal" />
 
         <SessionsPanel
             :patient="selectedPatient"
@@ -21,6 +21,10 @@
     <CreatePatientModal
         ref="createModal"
         @patient-created="onPatientCreated" />
+
+    <DeleteConfirmModal
+        ref="deleteModal"
+        @confirm-delete="deletePatient" />
   </div>
 </template>
 
@@ -29,13 +33,15 @@ import Sidebar from '../shared/Sidebar.vue';
 import PatientsList from './PatientsList.vue';
 import SessionsPanel from './SessionsPanel.vue';
 import CreatePatientModal from './CreatePatientModal.vue';
+import DeleteConfirmModal from './DeleteConfirmModal.vue';
 
 export default {
   components: {
     Sidebar,
     PatientsList,
     SessionsPanel,
-    CreatePatientModal
+    CreatePatientModal,
+    DeleteConfirmModal  // ← add this
   },
   data() {
     return {
@@ -51,8 +57,7 @@ export default {
     async loadPatients() {
       try {
         const response = await fetch('http://localhost:8000/api/patients/');
-        const data = await response.json();
-        this.patients = data;
+        this.patients = await response.json();
 
         for (let patient of this.patients) {
           const sessionsResponse = await fetch(`http://localhost:8000/api/sessions/?patient_id=${patient.patient_id}`);
@@ -69,11 +74,11 @@ export default {
       await this.loadSessions(patient.patient_id);
     },
 
-    async deletePatient(patientId) {
-      if (!confirm('Are you sure you want to delete this patient?')) {
-        return;
-      }
+    openDeleteModal(patient) {
+      this.$refs.deleteModal.show(patient);
+    },
 
+    async deletePatient(patientId) {
       try {
         const response = await fetch(`http://localhost:8000/api/patients/${patientId}/delete`, {
           method: 'DELETE'
@@ -109,7 +114,7 @@ export default {
       this.$refs.createModal.show();
     },
 
-    async onPatientCreated(newPatient) {
+    async onPatientCreated() {
       await this.loadPatients();
     }
   }
