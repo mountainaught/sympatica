@@ -1,19 +1,28 @@
 <template>
-  <div class="d-flex vh-100">
-    <Sidebar />
-    <div class="flex-grow-1 d-flex flex-column">
-      <TopBar />
-      <LiveStats />
-    </div>
+  <div>
+    <HomePage v-if="currentPage === 'home'" @navigate="changePage" />
+    <PatientsPage v-if="currentPage === 'patients'" @navigate="changePage" />
   </div>
 </template>
 
 <script>
-import Sidebar from './app/Sidebar.vue';
-import TopBar from './app/DeviceStatus.vue';
-import LiveReads from './app/LiveReads.vue';
+import HomePage from './components/home/HomePage.vue';
+import PatientsPage from './components/patients/PatientsPage.vue';
 
 export default {
-  components: { Sidebar, TopBar, LiveStats: LiveReads }
+  components: {
+    HomePage,
+    PatientsPage
+  },
+  data() {
+    return {
+      currentPage: 'home'
+    }
+  },
+  methods: {
+    changePage(page) {
+      this.currentPage = page;
+    }
+  }
 }
 </script>

@@ -1,3 +1,4 @@
+from datetime import datetime
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
@@ -29,14 +30,17 @@ def patient_listall(request):
 @csrf_exempt
 @require_http_methods(["POST"])
 def patient_create(request):
-    """POST create a new patient"""
+    """POST create new patient"""
     try:
         body = json.loads(request.body)
+
+        # Convert string date to date object
+        dob = datetime.strptime(body['date_of_birth'], '%Y-%m-%d').date()
 
         patient = Patient.objects.create(
             first_name=body['first_name'],
             last_name=body['last_name'],
-            date_of_birth=body['date_of_birth'],
+            date_of_birth=dob,  # ← now it's a date object!
         )
 
         return JsonResponse({
@@ -47,10 +51,13 @@ def patient_create(request):
             'date_of_birth': patient.date_of_birth.isoformat(),
             'age': patient.age,
         }, status=201)
+
     except KeyError as e:
         return JsonResponse({'error': f'Missing field: {e}'}, status=400)
     except json.JSONDecodeError:
         return JsonResponse({'error': 'Invalid JSON'}, status=400)
+    except ValueError:
+        return JsonResponse({'error': 'Invalid date format. Use YYYY-MM-DD'}, status=400)
 
 
 @require_http_methods(["GET"])
