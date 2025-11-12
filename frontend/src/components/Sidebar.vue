@@ -1,7 +1,7 @@
 <template>
   <div class="card shadow-lg border-0 sidebar-width rounded-card">
     <div class="card-body p-4">
-      <h4 class="fw-bold mb-4 text-center">Menu</h4>
+      <h4 class="fw-bold mb-4 text-center">sympatica</h4>
       <div class="d-grid gap-3">
         <button
             class="btn btn-lg rounded-pill shadow-sm"

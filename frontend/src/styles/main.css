@@ -66,18 +66,26 @@ tr:hover .hover-reveal,
     opacity: 1;
 }
 
-.delete-btn-circular {
-    width: var(--width-delete-btn);
-    height: var(--width-delete-btn);
-    border-radius: 50%;
-    display: inline-flex;
+/* ================== LIST BUTTON STYLES ================== */
+.delete-btn-circular,
+.set-active-btn {
+    width: 30px !important;
+    height: 30px !important;
+    min-width: 30px !important;
+    padding: 0 !important;
+    border-radius: 50% !important;
+    display: inline-flex !important;
     align-items: center;
     justify-content: center;
-    border: none;
+    font-size: 1rem;
+    line-height: 1;
+    flex-shrink: 0;
 }
 
-.delete-btn-circular:hover {
-    transform: scale(1.1);
+.set-active-btn:disabled {
+    opacity: 1 !important;
+    background-color: #198754 !important;
+    border-color: #198754 !important;
 }
 
 /* ================== MISC UTILITIES ================== */
@@ -86,12 +94,8 @@ tr:hover .hover-reveal,
     font-size: 0.75rem;
 }
 
-.min-width-btn {
-    min-width: 28px;
-}
-
 /* ================== RESPONSIVE UTILITIES ================== */
-@media (max-width: 768px) {
+@media (max-width: 1280px) {
     .patients-container {
         flex-direction: column !important;
     }

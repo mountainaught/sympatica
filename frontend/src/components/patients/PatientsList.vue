@@ -43,7 +43,7 @@
                   class="btn btn-danger btn-sm delete-btn-circular hover-reveal"
                   @click.stop="$emit('delete-patient', patient)"
                   title="Delete patient">
-                ✖
+                <i class="bi bi-x-lg"></i>
               </button>
             </td>
           </tr>
