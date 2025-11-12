@@ -1,25 +1,32 @@
 // services/BluetoothService.js
 import DataParser from './DataParser.js';
 
+// E4 BLE Characteristic UUIDs
+const DEVICE_NAME = 'Empatica E4';
+const CMD_SERVICE_UUID = '00003e70-0000-1000-8000-00805f9b34fb';
+const SENSOR_SERVICE_UUID = '00003ea0-0000-1000-8000-00805f9b34fb';
+
+const BVP_CHARACTERISTIC_UUID = '00003ea1-0000-1000-8000-00805f9b34fb';
+const EDA_CHARACTERISTIC_UUID = '00003ea8-0000-1000-8000-00805f9b34fb';
+const ACC_CHARACTERISTIC_UUID = '00003ea3-0000-1000-8000-00805f9b34fb';
+const TEMP_CHARACTERISTIC_UUID = '00003ea6-0000-1000-8000-00805f9b34fb';
+const CMD_CHARACTERISTIC_UUID = '00003e71-0000-1000-8000-00805f9b34fb';
+
 class BluetoothService {
     constructor() {
         this.device = null;
         this.server = null;
         this.isConnected = false;
-
-        // YOUR CUSTOM LIBRARY INSTANCE HERE
-        // this.customDevice = new YourCustomLibrary();
+        this.characteristics = {};
     }
 
     async connect() {
         try {
+            console.log('Scanning for Empatica E4...');
+
             this.device = await navigator.bluetooth.requestDevice({
-                filters: [
-                    { name: 'YOUR_DEVICE_NAME' }
-                ],
-                optionalServices: [
-                    'YOUR_SERVICE_UUID'
-                ]
+                filters: [{ name: DEVICE_NAME }],
+                optionalServices: [CMD_SERVICE_UUID, SENSOR_SERVICE_UUID] // E4's main service
             });
 
             console.log('Device selected:', this.device.name);
@@ -27,11 +34,21 @@ class BluetoothService {
             this.server = await this.device.gatt.connect();
             console.log('Connected to GATT server');
 
-            // TODO: Initialize your custom library here
-            // await this.customDevice.init(this.server);
+            const cmdService = await this.server.getPrimaryService(CMD_SERVICE_UUID);
+            // Get the main E4 service
+            const sensorService = await this.server.getPrimaryService(SENSOR_SERVICE_UUID);
+
+            // Get all characteristics from that service
+            this.characteristics.bvp = await sensorService.getCharacteristic(BVP_CHARACTERISTIC_UUID);
+            this.characteristics.eda = await sensorService.getCharacteristic(EDA_CHARACTERISTIC_UUID);
+            this.characteristics.acc = await sensorService.getCharacteristic(ACC_CHARACTERISTIC_UUID);
+            this.characteristics.temp = await sensorService.getCharacteristic(TEMP_CHARACTERISTIC_UUID);
+            this.characteristics.cmd = await cmdService.getCharacteristic(CMD_CHARACTERISTIC_UUID);
 
             this.isConnected = true;
             this.device.addEventListener('gattserverdisconnected', this.onDisconnected.bind(this));
+
+            console.log('All characteristics obtained!');
 
             return {
                 success: true,
@@ -47,37 +64,51 @@ class BluetoothService {
             };
         }
     }
-
+    
     async startReading() {
         if (!this.isConnected) {
             throw new Error('Device not connected');
         }
 
         try {
-            // TODO: Setup your characteristic notifications
-            // Example structure (adapt to your library):
+            console.log('Setting up notifications...');
 
-            // BVP
-            // await this.customDevice.startNotify('BVP_UUID', (data) => {
-            //   DataParser.parseBVP(data);
-            // });
+            // Setup notifications for each sensor
+            await this.characteristics.bvp.startNotifications();
+            this.characteristics.bvp.addEventListener('characteristicvaluechanged', (event) => {
+                const data = event.target.value;
+                DataParser.parseBVP(data);
+            });
 
-            // Temperature
-            // await this.customDevice.startNotify('TEMP_UUID', (data) => {
-            //   DataParser.parseTemperature(data);
-            // });
+            await this.characteristics.eda.startNotifications();
+            this.characteristics.eda.addEventListener('characteristicvaluechanged', (event) => {
+                const data = event.target.value;
+                DataParser.parseEDA(data);
+            });
 
-            // EDA
-            // await this.customDevice.startNotify('EDA_UUID', (data) => {
-            //   DataParser.parseEDA(data);
-            // });
+            await this.characteristics.temp.startNotifications();
+            this.characteristics.temp.addEventListener('characteristicvaluechanged', (event) => {
+                const data = event.target.value;
+                DataParser.parseTemperature(data);
+            });
 
-            // Accelerometer
-            // await this.customDevice.startNotify('ACC_UUID', (data) => {
-            //   DataParser.parseAccelerometer(data);
-            // });
+            await this.characteristics.acc.startNotifications();
+            this.characteristics.acc.addEventListener('characteristicvaluechanged', (event) => {
+                const data = event.target.value;
+                DataParser.parseAccelerometer(data);
+            });
 
-            console.log('Started reading from device');
+            console.log('Notifications setup complete!');
+
+            // Send start command: 1 byte (0x01) + 4 bytes (unix timestamp)
+            const timestamp = Math.floor(Date.now() / 1000);
+            const command = new ArrayBuffer(5);
+            const view = new DataView(command);
+            view.setUint8(0, 1); // Command byte
+            view.setUint32(1, timestamp, true); // Little-endian timestamp
+
+            await this.characteristics.cmd.writeValue(command);
+            console.log('Start command sent! E4 is streaming~');
 
         } catch (error) {
             console.error('Error starting readings:', error);
@@ -91,10 +122,13 @@ class BluetoothService {
         }
 
         try {
-            // TODO: Stop notifications
-            // await this.customDevice.stopNotify();
+            // Stop all notifications
+            await this.characteristics.bvp.stopNotifications();
+            await this.characteristics.eda.stopNotifications();
+            await this.characteristics.temp.stopNotifications();
+            await this.characteristics.acc.stopNotifications();
 
-            console.log('Stopped reading from device');
+            console.log('Stopped reading from E4');
 
         } catch (error) {
             console.error('Error stopping readings:', error);
@@ -110,10 +144,11 @@ class BluetoothService {
         this.isConnected = false;
         this.device = null;
         this.server = null;
+        this.characteristics = {};
     }
 
     onDisconnected() {
-        console.log('Device disconnected');
+        console.log('E4 disconnected');
         this.isConnected = false;
     }
 }

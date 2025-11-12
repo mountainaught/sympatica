@@ -1,4 +1,10 @@
 // services/DataParser.js
+import BVPParser from './parsers/BVPParser.js';
+import EDAParser from './parsers/EDAParser.js';
+import TempParser from './parsers/TempParser.js';
+import AccParser from './parsers/AccParser.js';
+import { postAPI } from '../utils/helpers.js';
+
 class DataParser {
     constructor() {
         this.onDataCallback = null;
@@ -7,75 +13,72 @@ class DataParser {
 
     setSession(sessionId) {
         this.currentSessionId = sessionId;
+        console.log('DataParser session set to:', sessionId);
     }
 
     onData(callback) {
         this.onDataCallback = callback;
     }
 
-    // BVP Parser
-    parseBVP(data) {
-        // TODO: Parse your BVP data format
-        // Example:
-        const value = data.getFloat32(0, true); // adjust based on your format
+    // ========== PARSER ROUTING ==========
 
-        const reading = {
-            type: 'bvp',
-            value: value,
-            unit: '',
-            timestamp: new Date().toISOString()
-        };
-
-        this.handleReading(reading);
+    parseBVP(dataView) {
+        const readings = BVPParser.parse(dataView);
+        if (readings) {
+            readings.forEach(value => {
+                this.handleReading({
+                    type: 'bvp',
+                    value: value,
+                    unit: '',
+                    timestamp: new Date().toISOString()
+                });
+            });
+        }
     }
 
-    // Temperature Parser
-    parseTemperature(data) {
-        // TODO: Parse your temperature data format
-        const value = data.getFloat32(0, true);
-
-        const reading = {
-            type: 'temperature',
-            value: value,
-            unit: '°C',
-            timestamp: new Date().toISOString()
-        };
-
-        this.handleReading(reading);
+    parseEDA(dataView) {
+        const readings = EDAParser.parse(dataView);
+        if (readings) {
+            readings.forEach(value => {
+                this.handleReading({
+                    type: 'eda',
+                    value: value,
+                    unit: 'µS',
+                    timestamp: new Date().toISOString()
+                });
+            });
+        }
     }
 
-    // EDA Parser
-    parseEDA(data) {
-        // TODO: Parse your EDA data format
-        const value = data.getFloat32(0, true);
-
-        const reading = {
-            type: 'eda',
-            value: value,
-            unit: 'µS',
-            timestamp: new Date().toISOString()
-        };
-
-        this.handleReading(reading);
+    parseTemperature(dataView) {
+        const readings = TempParser.parse(dataView);
+        if (readings) {
+            readings.forEach(value => {
+                this.handleReading({
+                    type: 'temperature',
+                    value: value,
+                    unit: '°C',
+                    timestamp: new Date().toISOString()
+                });
+            });
+        }
     }
 
-    // Accelerometer Parser
-    parseAccelerometer(data) {
-        // TODO: Parse your accelerometer data format
-        // Usually 3-axis data
-        const x = data.getFloat32(0, true);
-        const y = data.getFloat32(4, true);
-        const z = data.getFloat32(8, true);
-
-        const reading = {
-            type: 'acc',
-            value: { x, y, z },
-            unit: 'g',
-            timestamp: new Date().toISOString()
-        };
-
-        this.handleReading(reading);
+    parseAccelerometer(dataView) {
+        const readings = AccParser.parse(dataView);
+        if (readings) {
+            readings.forEach(({ x, y, z }) => {
+                this.handleReading({
+                    type: 'acc',
+                    value: { x, y, z },
+                    unit: 'g',
+                    timestamp: new Date().toISOString()
+                });
+            });
+        }
     }
+
+    // ========== READING HANDLER ==========
 
     async handleReading(reading) {
         // 1. Update UI (send to LiveStats)
@@ -83,7 +86,7 @@ class DataParser {
             this.onDataCallback(reading);
         }
 
-        // 2. Save to database
+        // 2. Save to database (if session active)
         if (this.currentSessionId) {
             await this.saveReading(reading);
         }
@@ -91,52 +94,28 @@ class DataParser {
 
     async saveReading(reading) {
         try {
-            // For accelerometer, save each axis separately
+            // For accelerometer, save as JSON string
             if (reading.type === 'acc') {
-                await this.saveAccReading(reading);
+                await postAPI('/readings/create/', {
+                    session_id: this.currentSessionId,
+                    reading_type: reading.type,
+                    value: JSON.stringify(reading.value), // {x, y, z} as string
+                    unit: reading.unit
+                });
                 return;
             }
 
-            const response = await fetch('http://localhost:8000/api/readings/create/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    session_id: this.currentSessionId,
-                    reading_type: reading.type,
-                    value: reading.value,
-                    unit: reading.unit
-                })
+            // For other sensors, save value directly
+            await postAPI('/readings/create/', {
+                session_id: this.currentSessionId,
+                reading_type: reading.type,
+                value: reading.value,
+                unit: reading.unit
             });
 
-            if (!response.ok) {
-                console.error('Failed to save reading');
-            }
         } catch (error) {
             console.error('Error saving reading:', error);
         }
-    }
-
-    async saveAccReading(reading) {
-        // Save X, Y, Z as separate readings or combined
-        // Option 1: Combined as JSON
-        await fetch('http://localhost:8000/api/readings/create/', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                session_id: this.currentSessionId,
-                reading_type: 'acc',
-                value: JSON.stringify(reading.value), // { x, y, z }
-                unit: reading.unit
-            })
-        });
-
-        // Option 2: Separate readings (you could save magnitude instead)
-        // const magnitude = Math.sqrt(reading.value.x**2 + reading.value.y**2 + reading.value.z**2);
-        // ... save magnitude
     }
 }
 
