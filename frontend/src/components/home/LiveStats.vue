@@ -1,12 +1,11 @@
-<!-- LiveStats.vue -->
 <template>
-  <div class="card shadow-lg border-0 flex-grow-1" style="border-radius: 20px; overflow: hidden;">
+  <div class="card shadow-lg border-0 flex-grow-1 rounded-card" style="overflow: hidden;">
     <div class="card-body p-4 overflow-auto">
       <h2 class="fw-bold mb-4">Live Readings</h2>
 
       <div class="row g-4">
         <div class="col-md-6 col-lg-3">
-          <div class="card border-0 shadow-sm h-100" style="border-radius: 15px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+          <div class="card border-0 shadow-sm h-100 gradient-purple rounded-medium">
             <div class="card-body text-center text-white p-4">
               <h5 class="fw-bold mb-3">BVP</h5>
               <p class="display-3 fw-bold mb-2">{{ readings.bvp || '--' }}</p>
@@ -16,7 +15,7 @@
         </div>
 
         <div class="col-md-6 col-lg-3">
-          <div class="card border-0 shadow-sm h-100" style="border-radius: 15px; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+          <div class="card border-0 shadow-sm h-100 gradient-pink rounded-medium">
             <div class="card-body text-center text-white p-4">
               <h5 class="fw-bold mb-3">Temperature</h5>
               <p class="display-3 fw-bold mb-2">{{ readings.temperature || '--' }}</p>
@@ -26,7 +25,7 @@
         </div>
 
         <div class="col-md-6 col-lg-3">
-          <div class="card border-0 shadow-sm h-100" style="border-radius: 15px; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+          <div class="card border-0 shadow-sm h-100 gradient-blue rounded-medium">
             <div class="card-body text-center text-white p-4">
               <h5 class="fw-bold mb-3">EDA</h5>
               <p class="display-3 fw-bold mb-2">{{ readings.eda || '--' }}</p>
@@ -36,7 +35,7 @@
         </div>
 
         <div class="col-md-6 col-lg-3">
-          <div class="card border-0 shadow-sm h-100" style="border-radius: 15px; background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+          <div class="card border-0 shadow-sm h-100 gradient-green rounded-medium">
             <div class="card-body text-center text-white p-4">
               <h5 class="fw-bold mb-3">Accelerometer</h5>
               <p class="fs-4 fw-bold mb-0" style="line-height: 1.6;">

@@ -1,7 +1,7 @@
 <template>
   <div class="modal fade" id="createSessionModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content" style="border-radius: 20px; border: none;">
+      <div class="modal-content rounded-card">
         <div class="modal-header border-0 pb-0">
           <h5 class="modal-title fw-bold">Create New Session</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -48,6 +48,7 @@
 
 <script>
 import { Modal } from 'bootstrap';
+import { postAPI } from '../../utils/helpers.js';
 
 export default {
   data() {
@@ -89,27 +90,14 @@ export default {
       this.error = null;
 
       try {
-        const response = await fetch('http://localhost:8000/api/sessions/create', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            patient_id: this.patientId,
-            session_name: this.formData.session_name,
-            notes: this.formData.notes
-          })
+        const data = await postAPI('/sessions/create', {
+          patient_id: this.patientId,
+          session_name: this.formData.session_name,
+          notes: this.formData.notes
         });
-
-        if (!response.ok) {
-          throw new Error('Failed to create session');
-        }
-
-        const data = await response.json();
         this.$emit('session-created', data);
         this.hide();
         this.resetForm();
-
       } catch (error) {
         console.error('Error creating session:', error);
         this.error = 'Failed to create session. Please try again.';

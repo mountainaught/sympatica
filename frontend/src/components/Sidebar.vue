@@ -1,5 +1,5 @@
 <template>
-  <div class="card shadow-lg border-0" style="flex: 0 0 220px; border-radius: 20px;">
+  <div class="card shadow-lg border-0 sidebar-width rounded-card">
     <div class="card-body p-4">
       <h4 class="fw-bold mb-4 text-center">Menu</h4>
       <div class="d-grid gap-3">
