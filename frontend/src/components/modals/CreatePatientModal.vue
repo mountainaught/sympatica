@@ -1,8 +1,7 @@
 <template>
-  <!-- Modal -->
   <div class="modal fade" id="createPatientModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content" style="border-radius: 20px; border: none;">
+      <div class="modal-content rounded-card">
         <div class="modal-header border-0 pb-0">
           <h5 class="modal-title fw-bold">Create New Patient</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -58,6 +57,7 @@
 
 <script>
 import { Modal } from 'bootstrap';
+import { postAPI } from '../../utils/helpers.js';
 
 export default {
   data() {
@@ -99,23 +99,10 @@ export default {
       this.error = null;
 
       try {
-        const response = await fetch('http://localhost:8000/api/patients/create', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(this.formData)
-        });
-
-        if (!response.ok) {
-          throw new Error('Failed to create patient');
-        }
-
-        const data = await response.json();
+        const data = await postAPI('/patients/create', this.formData);
         this.$emit('patient-created', data);
         this.hide();
         this.resetForm();
-
       } catch (error) {
         console.error('Error creating patient:', error);
         this.error = 'Failed to create patient. Please try again.';

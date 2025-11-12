@@ -1,0 +1,98 @@
+/* ================== CSS VARIABLES ================== */
+:root {
+    /* Gradients uwu */
+    --gradient-purple: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --gradient-pink: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    --gradient-blue: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    --gradient-green: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+
+    /* Border radius */
+    --radius-card: 20px;
+    --radius-medium: 15px;
+    --radius-small: 10px;
+
+    /* Common widths */
+    --width-delete-btn: 24px;
+    --width-sidebar: 220px;
+}
+
+/* ================== LAYOUT UTILITIES ================== */
+.rounded-card { border-radius: var(--radius-card); }
+.rounded-medium { border-radius: var(--radius-medium); }
+.rounded-small { border-radius: var(--radius-small); }
+
+.page-bg {
+    background: var(--gradient-purple);
+}
+
+.sidebar-width {
+    flex: 0 0 var(--width-sidebar);
+}
+
+/* ================== GRADIENT BACKGROUNDS ================== */
+.gradient-purple { background: var(--gradient-purple); }
+.gradient-pink { background: var(--gradient-pink); }
+.gradient-blue { background: var(--gradient-blue); }
+.gradient-green { background: var(--gradient-green); }
+
+/* ================== SCROLLBAR HIDING ================== */
+.hide-scrollbar {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+.hide-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+
+/* ================== TABLE STYLES ================== */
+.table-custom thead th {
+    border-top: none;
+    border-bottom: 2px solid #dee2e6;
+    letter-spacing: 0.5px;
+}
+
+.table-custom tbody td {
+    border-bottom: 1px solid #f0f0f0;
+}
+
+/* ================== HOVER EFFECTS ================== */
+.hover-reveal {
+    opacity: 0;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+tr:hover .hover-reveal,
+.hover-parent:hover .hover-reveal {
+    opacity: 1;
+}
+
+.delete-btn-circular {
+    width: var(--width-delete-btn);
+    height: var(--width-delete-btn);
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+}
+
+.delete-btn-circular:hover {
+    transform: scale(1.1);
+}
+
+/* ================== MISC UTILITIES ================== */
+.font-mono-small {
+    font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+    font-size: 0.75rem;
+}
+
+.min-width-btn {
+    min-width: 28px;
+}
+
+/* ================== RESPONSIVE UTILITIES ================== */
+@media (max-width: 768px) {
+    .patients-container {
+        flex-direction: column !important;
+    }
+}

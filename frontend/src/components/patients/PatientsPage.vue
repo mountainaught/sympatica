@@ -1,25 +1,19 @@
 <template>
-  <div class="vh-100 bg-gradient p-3" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-    <div class="d-flex gap-3 h-100">
-      <Sidebar :currentPage="'patients'" @navigate="$emit('navigate', $event)" />
+  <div class="flex-grow-1 d-flex gap-3 patients-container">
+    <PatientsList
+        :patients="patients"
+        :selectedPatientId="selectedPatient?.patient_id"
+        @select-patient="selectPatient"
+        @create-patient="openCreatePatientModal"
+        @delete-patient="openDeletePatientModal" />
 
-      <div class="flex-grow-1 d-flex gap-3 patients-container">
-        <PatientsList
-            :patients="patients"
-            :selectedPatientId="selectedPatient?.patient_id"
-            @select-patient="selectPatient"
-            @create-patient="openCreatePatientModal"
-            @delete-patient="openDeletePatientModal" />
-
-        <SessionsPanel
-            :patient="selectedPatient"
-            :sessions="sessions"
-            :activeSessionId="activeSession?.id"
-            @create-session="openCreateSessionModal"
-            @delete-session="openDeleteSessionModal"
-            @set-active-session="setActiveSession" />
-      </div>
-    </div>
+    <SessionsPanel
+        :patient="selectedPatient"
+        :sessions="sessions"
+        :activeSessionId="activeSession?.id"
+        @create-session="openCreateSessionModal"
+        @delete-session="openDeleteSessionModal"
+        @set-active-session="setActiveSession" />
 
     <CreatePatientModal
         ref="createPatientModal"
@@ -40,17 +34,16 @@
 </template>
 
 <script>
-import Sidebar from '../shared/Sidebar.vue';
 import PatientsList from './PatientsList.vue';
 import SessionsPanel from './SessionsPanel.vue';
-import CreatePatientModal from './CreatePatientModal.vue';
-import DeleteConfirmModal from './DeleteConfirmModal.vue';
-import CreateSessionModal from './CreateSessionModal.vue';
-import DeleteSessionModal from './DeleteSessionModal.vue';
+import CreatePatientModal from '../modals/CreatePatientModal.vue';
+import DeleteConfirmModal from '../modals/DeleteConfirmModal.vue';
+import CreateSessionModal from '../modals/CreateSessionModal.vue';
+import DeleteSessionModal from '../modals/DeleteSessionModal.vue';
+import { fetchAPI, deleteAPI } from '../../utils/helpers.js';
 
 export default {
   components: {
-    Sidebar,
     PatientsList,
     SessionsPanel,
     CreatePatientModal,
@@ -74,13 +67,11 @@ export default {
   methods: {
     async loadPatients() {
       try {
-        const response = await fetch('http://localhost:8000/api/patients/');
-        const data = await response.json();
+        const data = await fetchAPI('/patients/');
         this.patients = data;
 
         for (let patient of this.patients) {
-          const sessionsResponse = await fetch(`http://localhost:8000/api/sessions/?patient_id=${patient.patient_id}`);
-          const sessionsData = await sessionsResponse.json();
+          const sessionsData = await fetchAPI(`/sessions/?patient_id=${patient.patient_id}`);
           patient.session_count = sessionsData.length;
         }
       } catch (error) {
@@ -95,8 +86,7 @@ export default {
 
     async loadSessions(patientId) {
       try {
-        const response = await fetch(`http://localhost:8000/api/sessions/?patient_id=${patientId}`);
-        const data = await response.json();
+        const data = await fetchAPI(`/sessions/?patient_id=${patientId}`);
         this.sessions = data;
       } catch (error) {
         console.error('Error loading sessions:', error);
@@ -113,14 +103,7 @@ export default {
 
     async deletePatient(patientId) {
       try {
-        const response = await fetch(`http://localhost:8000/api/patients/${patientId}/`, {
-          method: 'DELETE'
-        });
-
-        if (!response.ok) {
-          throw new Error('Failed to delete patient');
-        }
-
+        await deleteAPI(`/patients/${patientId}/`);
         await this.loadPatients();
 
         if (this.selectedPatient?.patient_id === patientId) {
@@ -148,15 +131,9 @@ export default {
 
     async deleteSession(sessionId) {
       try {
-        const response = await fetch(`http://localhost:8000/api/sessions/${sessionId}/delete`, {
-          method: 'DELETE'
-        });
+        await deleteAPI(`/sessions/${sessionId}/delete`);
 
-        if (!response.ok) {
-          throw new Error('Failed to delete session');
-        }
-
-        if (this.activeSessionId === sessionId) {
+        if (this.activeSession?.id === sessionId) {
           this.$emit('set-active-session', null);
         }
 
@@ -187,11 +164,3 @@ export default {
   }
 }
 </script>
-
-<style scoped>
-@media (max-width: 768px) {
-  .patients-container {
-    flex-direction: column !important;
-  }
-}
-</style>
