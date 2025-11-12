@@ -103,7 +103,7 @@ export default {
 
     async deletePatient(patientId) {
       try {
-        await deleteAPI(`/patients/${patientId}/`);
+        await deleteAPI(`/patients/${patientId}/delete`);
         await this.loadPatients();
 
         if (this.selectedPatient?.patient_id === patientId) {

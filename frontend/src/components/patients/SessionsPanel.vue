@@ -79,19 +79,20 @@
                 </span>
               </td>
               <td class="align-middle py-2 text-end">
-                <div class="d-flex gap-1 justify-content-end">
+                <div class="d-flex gap-2 justify-content-end align-items-center">
                   <button
-                      class="btn btn-sm btn-primary rounded-pill px-2 min-width-btn"
+                      class="btn btn-primary btn-sm set-active-btn"
                       @click="$emit('set-active-session', session.id)"
                       :disabled="activeSessionId === session.id"
                       title="Set as active">
-                    {{ activeSessionId === session.id ? '✓' : '○' }}
+                    <i v-if="activeSessionId === session.id" class="bi bi-check-lg"></i>
+                    <i v-else class="bi bi-circle"></i>
                   </button>
                   <button
                       class="btn btn-danger btn-sm delete-btn-circular hover-reveal"
                       @click="$emit('delete-session', session)"
                       title="Delete session">
-                    ×
+                    <i class="bi bi-x-lg"></i>
                   </button>
                 </div>
               </td>

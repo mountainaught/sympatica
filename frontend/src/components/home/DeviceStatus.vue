@@ -1,32 +1,32 @@
 <template>
-  <div class="card shadow-lg border-0" style="border-radius: 20px;">
+  <div class="card shadow-lg border-0 rounded-card">
     <div class="card-body p-3">
       <div class="d-flex justify-content-between align-items-center">
         <div class="d-flex align-items-center gap-3">
-          <span class="badge rounded-pill fs-6 px-3 py-2" :class="isConnected ? 'bg-success' : 'bg-secondary'">
+          <span class="badge rounded-pill fs-6 badge-status" :class="isConnected ? 'bg-success' : 'bg-secondary'">
             <i class="bi bi-circle-fill me-2"></i>
             {{ isConnected ? 'Device Connected' : 'No Device' }}
           </span>
-          <span v-if="isConnected" class="badge bg-light text-dark rounded-pill px-3 py-2">
+          <span v-if="isConnected" class="badge rounded-pill fs-6 bg-light text-dark badge-device">
             {{ deviceName }}
           </span>
-          <span v-if="activeSession" class="badge bg-info text-dark rounded-pill px-3 py-2">
-            📊 {{ activeSession.patient_name }} - {{ activeSession.session_name || 'Unnamed' }}
+          <span v-if="activeSession" class="badge rounded-pill fs-6 bg-info text-dark badge-session">
+            {{ activeSession.patient_name }} - {{ activeSession.session_name || 'Unnamed' }}
           </span>
-          <span v-else class="badge bg-warning text-dark rounded-pill px-3 py-2">
-            ⚠️ No Active Session
+          <span v-else class="badge rounded-pill fs-6 bg-warning text-dark badge-session">
+            No Active Session
           </span>
         </div>
 
         <div class="d-flex gap-2">
-          <button class="btn btn-primary rounded-pill px-4 shadow-sm" @click="connectDevice" :disabled="isConnected">
-            📡 Connect
+          <button class="btn btn-primary rounded-pill px-4 shadow-sm btn-device-action" @click="connectDevice" :disabled="isConnected">
+            Connect
           </button>
-          <button class="btn btn-success rounded-pill px-4 shadow-sm" @click="startRecording" :disabled="!isConnected || isRecording || !activeSession">
-            ▶️ Start
+          <button class="btn btn-success rounded-pill px-4 shadow-sm btn-device-action" @click="startRecording" :disabled="!isConnected || isRecording || !activeSession">
+            Start
           </button>
-          <button class="btn btn-danger rounded-pill px-4 shadow-sm" @click="stopRecording" :disabled="!isRecording">
-            ⏹️ Stop
+          <button class="btn btn-danger rounded-pill px-4 shadow-sm btn-device-action" @click="stopRecording" :disabled="!isRecording">
+            Stop
           </button>
         </div>
       </div>
