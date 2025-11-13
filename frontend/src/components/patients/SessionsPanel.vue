@@ -49,16 +49,16 @@
             <thead class="sticky-top bg-white">
             <tr class="border-bottom">
               <th class="text-muted small fw-semibold py-2">SESSION</th>
-              <th class="text-muted small fw-semibold py-2 text-end">STATUS</th>
+              <th class="text-muted small fw-semibold py-2 text-end">DURATION</th>
               <th class="text-muted small fw-semibold py-2 text-end" style="width: 80px;"></th>
             </tr>
             </thead>
             <tbody>
             <tr
                 v-for="session in sessions"
-                :key="session.id"
+                :key="session.session_id"
                 class="hover-parent"
-                :class="{ 'table-primary': activeSessionId === session.id }">
+                :class="{ 'table-primary': activeSessionId === session.session_id }">
               <td class="align-middle py-2">
                 <div class="d-flex flex-column">
                   <span class="fw-medium">{{ session.session_name || 'Unnamed Session' }}</span>
@@ -67,25 +67,25 @@
                   </small>
                   <small class="text-muted">
                     {{ session.reading_count }} readings
-                    <span v-if="session.duration_seconds">
-                      • {{ formatDuration(session.duration_seconds) }}
-                    </span>
                   </small>
                 </div>
               </td>
               <td class="align-middle py-2 text-end">
-                <span class="badge rounded-pill" :class="session.is_active ? 'bg-success' : 'bg-secondary'">
-                  {{ session.is_active ? 'Active' : 'Ended' }}
+                <span v-if="session.duration_seconds" class="badge bg-secondary rounded-pill">
+                  {{ formatDuration(session.duration_seconds) }}
+                </span>
+                <span v-else class="badge bg-success rounded-pill">
+                  Active
                 </span>
               </td>
               <td class="align-middle py-2 text-end">
                 <div class="d-flex gap-2 justify-content-end align-items-center">
                   <button
                       class="btn btn-primary btn-sm set-active-btn"
-                      @click="$emit('set-active-session', session.id)"
-                      :disabled="activeSessionId === session.id"
+                      @click="setActiveSession(session.session_id)"
+                      :disabled="activeSessionId === session.session_id"
                       title="Set as active">
-                    <i v-if="activeSessionId === session.id" class="bi bi-check-lg"></i>
+                    <i v-if="activeSessionId === session.session_id" class="bi bi-check-lg"></i>
                     <i v-else class="bi bi-circle"></i>
                   </button>
                   <button
@@ -112,12 +112,15 @@ export default {
   props: {
     patient: Object,
     sessions: Array,
-    activeSessionId: Number
+    activeSessionId: String  // Now a UUID string!
   },
   methods: {
     formatDate,
     formatDuration,
-    truncateId
+    truncateId,
+    setActiveSession(sessionId) {
+      this.$router.push({ query: { session: sessionId } });
+    }
   }
 }
 </script>

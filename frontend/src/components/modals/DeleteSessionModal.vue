@@ -62,7 +62,7 @@ export default {
     },
 
     confirmDelete() {
-      this.$emit('confirm-delete', this.session.id);
+      this.$emit('confirm-delete', this.session.session_id);
       this.hide();
     }
   }

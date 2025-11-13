@@ -1,11 +1,10 @@
 <template>
   <div class="flex-grow-1 d-flex flex-column gap-3">
     <DeviceStatus
-        :activeSession="activeSession"
         @device-connected="onDeviceConnected"
         @recording-started="onRecordingStarted"
         @recording-stopped="onRecordingStopped" />
-    <LiveStats :activeSessionId="activeSession?.id" />
+    <LiveStats />
   </div>
 </template>
 
@@ -18,20 +17,18 @@ export default {
     DeviceStatus,
     LiveStats
   },
-  props: {
-    activeSession: Object
-  },
   methods: {
     onDeviceConnected(deviceInfo) {
       console.log('Device connected:', deviceInfo);
     },
 
     onRecordingStarted() {
-      if (!this.activeSession) {
+      const sessionId = this.$route.query.session;
+      if (!sessionId) {
         alert('Please select an active session in the Patients page first!');
         return;
       }
-      console.log('Recording to session:', this.activeSession.id);
+      console.log('Recording to session:', sessionId);
     },
 
     onRecordingStopped() {

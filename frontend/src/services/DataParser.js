@@ -8,11 +8,11 @@ import { postAPI } from '../utils/helpers.js';
 class DataParser {
     constructor() {
         this.onDataCallback = null;
-        this.currentSessionId = null;
+        this.currentSessionId = null; // Now stores UUID string!
     }
 
     setSession(sessionId) {
-        this.currentSessionId = sessionId;
+        this.currentSessionId = sessionId; // UUID string
         console.log('DataParser session set to:', sessionId);
     }
 
@@ -29,7 +29,6 @@ class DataParser {
                 this.handleReading({
                     type: 'bvp',
                     value: value,
-                    unit: '',
                     timestamp: new Date().toISOString()
                 });
             });
@@ -43,7 +42,6 @@ class DataParser {
                 this.handleReading({
                     type: 'eda',
                     value: value,
-                    unit: 'µS',
                     timestamp: new Date().toISOString()
                 });
             });
@@ -57,13 +55,13 @@ class DataParser {
                 this.handleReading({
                     type: 'temperature',
                     value: value,
-                    unit: '°C',
                     timestamp: new Date().toISOString()
                 });
             });
         }
     }
 
+    // TODO: saving accelerometer as float doesnt work cuz its three different values in one string
     parseAccelerometer(dataView) {
         const readings = AccParser.parse(dataView);
         if (readings) {
@@ -71,7 +69,6 @@ class DataParser {
                 this.handleReading({
                     type: 'acc',
                     value: { x, y, z },
-                    unit: 'g',
                     timestamp: new Date().toISOString()
                 });
             });
@@ -97,20 +94,18 @@ class DataParser {
             // For accelerometer, save as JSON string
             if (reading.type === 'acc') {
                 await postAPI('/readings/create/', {
-                    session_id: this.currentSessionId,
+                    session_id: this.currentSessionId, // UUID string
                     reading_type: reading.type,
-                    value: JSON.stringify(reading.value), // {x, y, z} as string
-                    unit: reading.unit
+                    value: JSON.stringify(reading.value) // {x, y, z} as string
                 });
                 return;
             }
 
             // For other sensors, save value directly
             await postAPI('/readings/create/', {
-                session_id: this.currentSessionId,
+                session_id: this.currentSessionId, // UUID string
                 reading_type: reading.type,
-                value: reading.value,
-                unit: reading.unit
+                value: reading.value
             });
 
         } catch (error) {

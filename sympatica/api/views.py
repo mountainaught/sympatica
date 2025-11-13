@@ -12,7 +12,7 @@ from .models import Patient, Session, Reading
 @require_http_methods(["GET"])
 def patient_listall(request):
     """GET patients list"""
-    patients = Patient.objects.filter(is_active=True)
+    patients = Patient.objects.all()
 
     data = [{
         'patient_id': str(p.patient_id),
@@ -34,13 +34,12 @@ def patient_create(request):
     try:
         body = json.loads(request.body)
 
-        # Convert string date to date object
         dob = datetime.strptime(body['date_of_birth'], '%Y-%m-%d').date()
 
         patient = Patient.objects.create(
             first_name=body['first_name'],
             last_name=body['last_name'],
-            date_of_birth=dob,  # ← now it's a date object!
+            date_of_birth=dob,
         )
 
         return JsonResponse({
@@ -90,7 +89,6 @@ def patient_edit(request, patient_id):
         patient = Patient.objects.get(patient_id=patient_id)
         body = json.loads(request.body)
 
-        # update fields
         if 'first_name' in body:
             patient.first_name = body['first_name']
         if 'last_name' in body:
@@ -140,14 +138,13 @@ def session_listall(request):
         sessions = Session.objects.all()
 
     data = [{
-        'id': s.id,
+        'session_id': str(s.session_id),
         'patient_id': str(s.patient.patient_id),
         'patient_name': s.patient.full_name,
         'session_name': s.session_name,
         'started_at': s.started_at.isoformat(),
         'ended_at': s.ended_at.isoformat() if s.ended_at else None,
         'duration_seconds': s.duration_seconds,
-        'is_active': s.is_active,
         'reading_count': s.reading_count,
     } for s in sessions]
 
@@ -158,10 +155,10 @@ def session_listall(request):
 def session_view(request, session_id):
     """GET a specific session"""
     try:
-        session = Session.objects.get(id=session_id)
+        session = Session.objects.get(session_id=session_id)
 
         data = {
-            'id': session.id,
+            'session_id': str(session.session_id),
             'patient_id': str(session.patient.patient_id),
             'patient_name': session.patient.full_name,
             'session_name': session.session_name,
@@ -169,7 +166,6 @@ def session_view(request, session_id):
             'started_at': session.started_at.isoformat(),
             'ended_at': session.ended_at.isoformat() if session.ended_at else None,
             'duration_seconds': session.duration_seconds,
-            'is_active': session.is_active,
             'reading_count': session.reading_count,
         }
 
@@ -194,11 +190,10 @@ def session_create(request):
         )
 
         return JsonResponse({
-            'id': session.id,
+            'session_id': str(session.session_id),
             'patient_id': str(session.patient.patient_id),
             'session_name': session.session_name,
             'started_at': session.started_at.isoformat(),
-            'is_active': session.is_active,
         }, status=201)
 
     except Patient.DoesNotExist:
@@ -214,7 +209,7 @@ def session_create(request):
 def session_edit(request, session_id):
     """PUT/PATCH edit session"""
     try:
-        session = Session.objects.get(id=session_id)
+        session = Session.objects.get(session_id=session_id)
         body = json.loads(request.body)
 
         if 'session_name' in body:
@@ -225,7 +220,7 @@ def session_edit(request, session_id):
         session.save()
 
         return JsonResponse({
-            'id': session.id,
+            'session_id': str(session.session_id),
             'session_name': session.session_name,
             'notes': session.notes,
         })
@@ -240,10 +235,10 @@ def session_edit(request, session_id):
 def session_delete(request, session_id):
     """DELETE session (cascades to readings)"""
     try:
-        session = Session.objects.get(id=session_id)
+        session = Session.objects.get(session_id=session_id)
         session.delete()
 
-        return JsonResponse({'status': 'session deleted', 'session_id': session_id})
+        return JsonResponse({'status': 'session deleted', 'session_id': str(session_id)})
     except Session.DoesNotExist:
         return JsonResponse({'error': 'Session not found'}, status=404)
 
@@ -253,12 +248,12 @@ def session_delete(request, session_id):
 def session_end(request, session_id):
     """POST end a session"""
     try:
-        session = Session.objects.get(id=session_id)
+        session = Session.objects.get(session_id=session_id)
         session.end_session()
 
         return JsonResponse({
             'status': 'session ended',
-            'id': session.id,
+            'session_id': str(session.session_id),
             'ended_at': session.ended_at.isoformat(),
             'duration_seconds': session.duration_seconds,
         })
@@ -274,20 +269,17 @@ def reading_listall(request):
     """GET readings"""
     session_id = request.GET.get('session_id')
 
-    # filter by session id if provided
     if session_id:
-        readings = Reading.objects.filter(session_id=session_id)
+        readings = Reading.objects.filter(session__session_id=session_id)
     else:
-        readings = Reading.objects.all()[:100]  # limit
+        readings = Reading.objects.all()[:100]
 
     data = [{
         'id': r.id,
-        'session_id': r.session.id,
+        'session_id': str(r.session.session_id),
         'reading_type': r.reading_type,
         'value': r.value,
-        'unit': r.unit,
         'timestamp': r.timestamp.isoformat(),
-        'notes': r.notes,
     } for r in readings]
 
     return JsonResponse(data, safe=False)
@@ -299,21 +291,19 @@ def reading_create(request):
     """POST create a new reading"""
     try:
         body = json.loads(request.body)
-        session = Session.objects.get(id=body['session_id'])
+        session = Session.objects.get(session_id=body['session_id'])
+
         reading = Reading.objects.create(
             session=session,
             reading_type=body['reading_type'],
             value=float(body['value']),
-            unit=body.get('unit', ''),
-            notes=body.get('notes', ''),
         )
 
         return JsonResponse({
             'id': reading.id,
-            'session_id': reading.session.id,
+            'session_id': str(reading.session.session_id),
             'reading_type': reading.reading_type,
             'value': reading.value,
-            'unit': reading.unit,
             'timestamp': reading.timestamp.isoformat(),
         }, status=201)
 

@@ -55,9 +55,6 @@
 import DataParser from '../../services/DataParser.js';
 
 export default {
-  props: {
-    activeSessionId: Number
-  },
   data() {
     return {
       readings: {
@@ -73,13 +70,21 @@ export default {
   mounted() {
     DataParser.onData(this.handleReading);
   },
+  computed: {
+    activeSessionId() {
+      return this.$route.query.session || null;
+    }
+  },
   watch: {
-    activeSessionId(newSessionId) {
-      if (newSessionId) {
-        DataParser.setSession(newSessionId);
-        console.log('DataParser now saving to session:', newSessionId);
-      } else {
-        DataParser.setSession(null);
+    activeSessionId: {
+      immediate: true,
+      handler(newSessionId) {
+        if (newSessionId) {
+          DataParser.setSession(newSessionId);
+          console.log('DataParser now saving to session:', newSessionId);
+        } else {
+          DataParser.setSession(null);
+        }
       }
     }
   },
