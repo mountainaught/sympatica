@@ -28,9 +28,10 @@ urlpatterns = [
     # Sessions
     path('sessions/', views.session_listall, name='session-list'),
     path('sessions/create', views.session_create, name='session-create'),
-    path('sessions/<int:session_id>/', views.session_view, name='session-view'),
-    path('sessions/<int:session_id>/edit', views.session_edit, name='session-edit'),
-    path('sessions/<int:session_id>/delete', views.session_delete, name='session-delete'),
+    path('sessions/<uuid:session_id>/', views.session_view, name='session-view'),
+    path('sessions/<uuid:session_id>/edit', views.session_edit, name='session-edit'),
+    path('sessions/<uuid:session_id>/delete', views.session_delete, name='session-delete'),
+    path('sessions/<uuid:session_id>/readings/', views.session_readings, name='session-readings'),
 
     # Readings
     path('readings/', views.reading_listall, name='readings-list'),

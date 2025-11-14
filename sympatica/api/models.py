@@ -25,7 +25,6 @@ class Patient(models.Model):
     # Metadata
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    is_active = models.BooleanField(default=True)
 
     class Meta:
         ordering = ['last_name', 'first_name']
@@ -48,6 +47,13 @@ class Patient(models.Model):
 
 class Session(models.Model):
     """Each time a user connects and records = a new session"""
+    session_id = models.UUIDField(
+        primary_key=True,
+        default=uuid.uuid4,
+        editable=False,
+        help_text="Unique session identifier"
+    )
+
     patient = models.ForeignKey(
         Patient,
         on_delete=models.CASCADE,
@@ -60,20 +66,18 @@ class Session(models.Model):
 
     # optional context
     session_name = models.CharField(max_length=200, blank=True)
-    notes = models.TextField(blank=True)  # "patient has withdrawals, this condition, etc."
+    notes = models.TextField(blank=True)
     duration_seconds = models.IntegerField(null=True, blank=True)
-    is_active = models.BooleanField(default=True)  # currently recording?
 
     class Meta:
         ordering = ['-started_at']
 
     def __str__(self):
-        return f"Session {self.id} - {self.patient.first_name} {self.patient.last_name} at {self.started_at}"
+        return f"Session {self.session_id} - {self.patient.first_name} {self.patient.last_name} at {self.started_at}"
 
     def end_session(self):
         """Call this when the user stops recording"""
         self.ended_at = timezone.now()
-        self.is_active = False
         self.duration_seconds = (self.ended_at - self.started_at).total_seconds()
         self.save()
 
@@ -99,11 +103,8 @@ class Reading(models.Model):
             ('acc', 'Accelerometer (3-axis XYZ)'),
         ]
     )
-    value = models.FloatField()
-    unit = models.CharField(max_length=20, blank=True)  # "bpm", "°C", etc
-
+    value = models.TextField()  # Changed from FloatField to TextField!
     timestamp = models.DateTimeField(auto_now_add=True)
-    notes = models.TextField(blank=True)
 
     class Meta:
         ordering = ['timestamp']

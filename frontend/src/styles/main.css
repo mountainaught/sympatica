@@ -1,3 +1,4 @@
+/* main.css */
 /* ================== CSS VARIABLES ================== */
 :root {
     /* Gradients uwu */
@@ -99,4 +100,66 @@ tr:hover .hover-reveal,
     .patients-container {
         flex-direction: column !important;
     }
+}
+
+/* main.css - ADD THESE TO THE EXISTING FILE */
+
+/* ================== VITALS CARDS ================== */
+.vitals-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.vitals-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1) !important;
+}
+
+.badge-status {
+    font-size: 0.7rem;
+    padding: 0.25rem 0.5rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+/* ================== GRAPH STYLES ================== */
+.graph-container {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    transition: box-shadow 0.2s ease;
+}
+
+.graph-container:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+}
+
+.graph-plot {
+    width: 100%;
+    height: 100%;
+    min-height: 200px;
+}
+
+.graph-header {
+    display: flex;
+    align-items: baseline;
+}
+
+/* ================== RECORDING INDICATOR ================== */
+.blink {
+    animation: blink-animation 1.5s infinite;
+}
+
+@keyframes blink-animation {
+    0%, 49% { opacity: 1; }
+    50%, 100% { opacity: 0.3; }
+}
+
+/* ================== TIME WINDOW BUTTONS ================== */
+.btn-group .btn-outline-secondary.active {
+    background-color: #6c757d;
+    color: white;
+    border-color: #6c757d;
+}
+
+.btn-group .btn-outline-secondary:hover {
+    background-color: #5c636a;
+    color: white;
 }

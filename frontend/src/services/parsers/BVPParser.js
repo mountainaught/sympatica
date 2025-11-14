@@ -1,3 +1,4 @@
+// services/parsers/BVPParser.js
 // FIR filter coefficients (from decompiled E4 code)
 const FIR_COEF = [0.05, 0.1, 0.2, 0.3, 0.2, 0.1, 0.05];
 const BVP_SCALE_FACTOR = 10.0;
@@ -64,7 +65,7 @@ class BVPParser {
             const filteredKalman = this.applyFIR(this.fir3Buffer);
 
             // === Stage 7: Scale and output ===
-            const bvp = Math.round(-filteredKalman * BVP_SCALE_FACTOR * 100) / 100;
+            const bvp = Math.round(-filteredKalman * BVP_SCALE_FACTOR * 1000) / 1000; // 3 decimals
             bvpReadings.push(bvp);
         }
 

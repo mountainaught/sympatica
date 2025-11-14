@@ -1,3 +1,4 @@
+// services/parsers/EDAParser.js
 class EDAParser {
     /**
      * Parse EDA/GSR packet from E4
@@ -23,8 +24,7 @@ class EDAParser {
 
             // Convert to microsiemens
             const edaMicrosiemens = rawValue > 0 ? 1000000.0 / rawValue : 0;
-
-            readings.push(Math.round(edaMicrosiemens * 100) / 100); // Round to 2 decimals
+            readings.push(Math.round(edaMicrosiemens * 1000) / 1000); // 3 decimals
             offset += 3;
         }
 

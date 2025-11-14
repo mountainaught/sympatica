@@ -1,3 +1,4 @@
+// PatientsPage.vue
 <template>
   <div class="flex-grow-1 d-flex gap-3 patients-container">
     <PatientsList
@@ -10,7 +11,7 @@
     <SessionsPanel
         :patient="selectedPatient"
         :sessions="sessions"
-        :activeSessionId="activeSession?.id"
+        :activeSessionId="activeSession?.session_id"
         @create-session="openCreateSessionModal"
         @delete-session="openDeleteSessionModal"
         @set-active-session="setActiveSession" />
@@ -36,11 +37,11 @@
 <script>
 import PatientsList from './PatientsList.vue';
 import SessionsPanel from './SessionsPanel.vue';
-import CreatePatientModal from '../modals/CreatePatientModal.vue';
-import DeleteConfirmModal from '../modals/DeleteConfirmModal.vue';
-import CreateSessionModal from '../modals/CreateSessionModal.vue';
-import DeleteSessionModal from '../modals/DeleteSessionModal.vue';
-import { fetchAPI, deleteAPI } from '../../utils/helpers.js';
+import CreatePatientModal from './modals/CreatePatientModal.vue';
+import DeleteConfirmModal from './modals/DeleteConfirmModal.vue';
+import CreateSessionModal from './modals/CreateSessionModal.vue';
+import DeleteSessionModal from './modals/DeleteSessionModal.vue';
+import {deleteAPI, fetchAPI} from '../../utils/helpers.js';
 
 export default {
   components: {
@@ -51,8 +52,13 @@ export default {
     CreateSessionModal,
     DeleteSessionModal
   },
-  props: {
-    activeSession: Object
+  computed: {
+    activeSession() {
+      const sessionId = this.$route.query.session;
+      if (!sessionId) return null;
+      const session = this.sessions.find(s => s.session_id === sessionId);
+      return session;
+    }
   },
   data() {
     return {
@@ -67,8 +73,7 @@ export default {
   methods: {
     async loadPatients() {
       try {
-        const data = await fetchAPI('/patients/');
-        this.patients = data;
+        this.patients = await fetchAPI('/patients/');
 
         for (let patient of this.patients) {
           const sessionsData = await fetchAPI(`/sessions/?patient_id=${patient.patient_id}`);
@@ -86,8 +91,7 @@ export default {
 
     async loadSessions(patientId) {
       try {
-        const data = await fetchAPI(`/sessions/?patient_id=${patientId}`);
-        this.sessions = data;
+        this.sessions = await fetchAPI(`/sessions/?patient_id=${patientId}`);
       } catch (error) {
         console.error('Error loading sessions:', error);
       }
@@ -103,7 +107,7 @@ export default {
 
     async deletePatient(patientId) {
       try {
-        await deleteAPI(`/patients/${patientId}/delete`);
+        await deleteAPI(`/patients/${patientId}/`);
         await this.loadPatients();
 
         if (this.selectedPatient?.patient_id === patientId) {
@@ -133,7 +137,7 @@ export default {
       try {
         await deleteAPI(`/sessions/${sessionId}/delete`);
 
-        if (this.activeSession?.id === sessionId) {
+        if (this.activeSession?.session_id === sessionId) {
           this.$emit('set-active-session', null);
         }
 
@@ -151,15 +155,7 @@ export default {
     },
 
     setActiveSession(sessionId) {
-      const session = this.sessions.find(s => s.id === sessionId);
-      if (session) {
-        const sessionData = {
-          ...session,
-          patient_name: this.selectedPatient.full_name,
-          patient_id: this.selectedPatient.patient_id
-        };
-        this.$emit('set-active-session', sessionData);
-      }
+      this.$router.push({ query: { session: sessionId } });
     }
   }
 }

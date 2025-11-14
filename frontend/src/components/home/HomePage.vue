@@ -1,11 +1,12 @@
+// components/home/HomePage.vue
 <template>
   <div class="flex-grow-1 d-flex flex-column gap-3">
     <DeviceStatus
-        :activeSession="activeSession"
         @device-connected="onDeviceConnected"
         @recording-started="onRecordingStarted"
-        @recording-stopped="onRecordingStopped" />
-    <LiveStats :activeSessionId="activeSession?.id" />
+        @recording-stopped="onRecordingStopped"
+        @device-disconnected="onDeviceDisconnected" />
+    <LiveStats :isRecording="isRecording" />
   </div>
 </template>
 
@@ -18,8 +19,10 @@ export default {
     DeviceStatus,
     LiveStats
   },
-  props: {
-    activeSession: Object
+  data() {
+    return {
+      isRecording: false
+    }
   },
   methods: {
     onDeviceConnected(deviceInfo) {
@@ -27,15 +30,23 @@ export default {
     },
 
     onRecordingStarted() {
-      if (!this.activeSession) {
+      const sessionId = this.$route.query.session;
+      if (!sessionId) {
         alert('Please select an active session in the Patients page first!');
         return;
       }
-      console.log('Recording to session:', this.activeSession.id);
+      this.isRecording = true;
+      console.log('Recording to session:', sessionId);
     },
 
     onRecordingStopped() {
+      this.isRecording = false;
       console.log('Recording stopped');
+    },
+
+    onDeviceDisconnected() {
+      this.isRecording = false;
+      console.log('Device disconnected');
     }
   }
 }

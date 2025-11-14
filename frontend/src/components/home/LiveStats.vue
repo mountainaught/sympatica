@@ -1,62 +1,42 @@
+// components/home/LiveStats.vue (FIXED)
 <template>
   <div class="card shadow-lg border-0 flex-grow-1 rounded-card" style="overflow: hidden;">
-    <div class="card-body p-4 overflow-auto">
-      <h2 class="fw-bold mb-4">Live Readings</h2>
-
-      <div class="row g-4">
-        <div class="col-md-6 col-lg-3">
-          <div class="card border-0 shadow-sm h-100 gradient-purple rounded-medium">
-            <div class="card-body text-center text-white p-4">
-              <h5 class="fw-bold mb-3">BVP</h5>
-              <p class="display-3 fw-bold mb-2">{{ readings.bvp || '--' }}</p>
-              <small class="opacity-75">Blood Volume Pulse</small>
-            </div>
-          </div>
-        </div>
-
-        <div class="col-md-6 col-lg-3">
-          <div class="card border-0 shadow-sm h-100 gradient-pink rounded-medium">
-            <div class="card-body text-center text-white p-4">
-              <h5 class="fw-bold mb-3">Temperature</h5>
-              <p class="display-3 fw-bold mb-2">{{ readings.temperature || '--' }}</p>
-              <small class="opacity-75">°C</small>
-            </div>
-          </div>
-        </div>
-
-        <div class="col-md-6 col-lg-3">
-          <div class="card border-0 shadow-sm h-100 gradient-blue rounded-medium">
-            <div class="card-body text-center text-white p-4">
-              <h5 class="fw-bold mb-3">EDA</h5>
-              <p class="display-3 fw-bold mb-2">{{ readings.eda || '--' }}</p>
-              <small class="opacity-75">µS</small>
-            </div>
-          </div>
-        </div>
-
-        <div class="col-md-6 col-lg-3">
-          <div class="card border-0 shadow-sm h-100 gradient-green rounded-medium">
-            <div class="card-body text-center text-white p-4">
-              <h5 class="fw-bold mb-3">Accelerometer</h5>
-              <p class="fs-4 fw-bold mb-0" style="line-height: 1.6;">
-                X: {{ readings.acc_x || '--' }}<br>
-                Y: {{ readings.acc_y || '--' }}<br>
-                Z: {{ readings.acc_z || '--' }}
-              </p>
-            </div>
-          </div>
+    <div class="card-body p-4 d-flex flex-column h-100">
+      <!-- HEADER -->
+      <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
+        <h2 class="fw-bold mb-0 text-dark">Physiological Monitoring</h2>
+        <div class="d-flex gap-2 align-items-center">
+          <span class="badge bg-success px-3 py-2" v-if="isRecording">
+            <i class="bi bi-circle-fill blink me-2"></i>RECORDING
+          </span>
+          <span class="text-muted small">{{ currentTime }}</span>
         </div>
       </div>
+
+      <!-- VITALS CARDS -->
+      <VitalCards :readings="readings" />
+
+      <!-- LIVE GRAPHS - ADD REF, REMOVE PROP -->
+      <LiveGraphs ref="liveGraphs" />
     </div>
   </div>
 </template>
 
 <script>
+import VitalCards from './readings/VitalCards.vue';
+import LiveGraphs from './readings/LiveGraphs.vue';
 import DataParser from '../../services/DataParser.js';
 
 export default {
+  components: {
+    VitalCards,
+    LiveGraphs
+  },
   props: {
-    activeSessionId: Number
+    isRecording: {
+      type: Boolean,
+      default: false
+    }
   },
   data() {
     return {
@@ -67,39 +47,60 @@ export default {
         acc_x: null,
         acc_y: null,
         acc_z: null
+      },
+      currentTime: ''
+    }
+  },
+  computed: {
+    activeSessionId() {
+      return this.$route.query.session || null;
+    }
+  },
+  watch: {
+    activeSessionId: {
+      immediate: true,
+      handler(newSessionId) {
+        if (newSessionId) {
+          DataParser.setSession(newSessionId);
+        } else {
+          DataParser.setSession(null);
+        }
       }
     }
   },
   mounted() {
     DataParser.onData(this.handleReading);
-  },
-  watch: {
-    activeSessionId(newSessionId) {
-      if (newSessionId) {
-        DataParser.setSession(newSessionId);
-        console.log('DataParser now saving to session:', newSessionId);
-      } else {
-        DataParser.setSession(null);
-      }
-    }
+    this.updateTime();
+    setInterval(this.updateTime, 1000);
   },
   methods: {
+    updateTime() {
+      const now = new Date();
+      this.currentTime = now.toLocaleTimeString();
+    },
+
     handleReading(reading) {
+      // Update vitals display
       switch(reading.type) {
         case 'bvp':
           this.readings.bvp = reading.value.toFixed(2);
           break;
         case 'temperature':
-          this.readings.temperature = reading.value.toFixed(1);
+          this.readings.temperature = reading.value.toFixed(2);
           break;
         case 'eda':
-          this.readings.eda = reading.value.toFixed(2);
+          this.readings.eda = reading.value.toFixed(3);
           break;
         case 'acc':
           this.readings.acc_x = reading.value.x.toFixed(2);
           this.readings.acc_y = reading.value.y.toFixed(2);
           this.readings.acc_z = reading.value.z.toFixed(2);
           break;
+      }
+
+      // Send to LiveGraphs via ref
+      if (this.$refs.liveGraphs && this.$refs.liveGraphs.handleReading) {
+        this.$refs.liveGraphs.handleReading(reading);
       }
     }
   }
