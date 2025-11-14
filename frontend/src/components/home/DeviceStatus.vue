@@ -71,6 +71,14 @@ export default {
     }
   },
   async mounted() {
+    // Check if already connected
+    const status = BluetoothService.getConnectionStatus();
+    if (status.isConnected) {
+      this.isConnected = true;
+      this.deviceName = status.deviceName;
+    }
+
+    // Load session if in URL
     if (this.sessionId) {
       try {
         this.sessionData = await fetchAPI(`/sessions/${this.sessionId}/`);
@@ -120,9 +128,6 @@ export default {
       this.deviceName = '';
       this.$emit('device-disconnected');
     }
-  },
-  beforeUnmount() {
-    BluetoothService.disconnect();
   }
 }
 </script>

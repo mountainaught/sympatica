@@ -2,7 +2,7 @@
 import DataParser from './DataParser.js';
 
 // E4 BLE Characteristic UUIDs
-const DEVICE_NAME = 'Empatica E4';
+const DEVICE_NAME = 'Empatica E4 43d011';
 const CMD_SERVICE_UUID = '00003e70-0000-1000-8000-00805f9b34fb';
 const SENSOR_SERVICE_UUID = '00003ea0-0000-1000-8000-00805f9b34fb';
 
@@ -17,6 +17,7 @@ class BluetoothService {
         this.device = null;
         this.server = null;
         this.isConnected = false;
+        this.deviceName = '';
         this.characteristics = {};
     }
 
@@ -63,6 +64,13 @@ class BluetoothService {
                 error: error.message
             };
         }
+    }
+
+    getConnectionStatus() {
+        return {
+            isConnected: this.isConnected,
+            deviceName: this.deviceName
+        };
     }
     
     async startReading() {

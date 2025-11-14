@@ -331,18 +331,24 @@ def reading_create(request):
         if not readings_data:
             return JsonResponse({'error': 'No readings provided'}, status=400)
 
-        # Prepare all readings for bulk insert
         readings_to_create = []
         for reading_data in readings_data:
             session = Session.objects.get(session_id=reading_data['session_id'])
+
+            # Parse the timestamp from the request
+            timestamp = None
+            if 'timestamp' in reading_data:
+                from django.utils import timezone
+                from datetime import datetime
+                timestamp = datetime.fromisoformat(reading_data['timestamp'].replace('Z', '+00:00'))
 
             readings_to_create.append(Reading(
                 session=session,
                 reading_type=reading_data['reading_type'],
                 value=str(reading_data.get('value')),
+                timestamp=timestamp  # Use the provided timestamp
             ))
 
-        # Bulk create all at once - MUCH faster!
         created_readings = Reading.objects.bulk_create(readings_to_create)
 
         return JsonResponse({

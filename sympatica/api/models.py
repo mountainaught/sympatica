@@ -104,7 +104,7 @@ class Reading(models.Model):
         ]
     )
     value = models.TextField()  # Changed from FloatField to TextField!
-    timestamp = models.DateTimeField(auto_now_add=True)
+    timestamp = models.DateTimeField()
 
     class Meta:
         ordering = ['timestamp']

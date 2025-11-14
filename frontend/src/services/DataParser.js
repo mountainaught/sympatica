@@ -119,18 +119,20 @@ class DataParser {
     }
 
     bufferReading(reading) {
-        // Add to buffer
+        console.log('Buffering:', reading.type, 'with timestamp:', reading.timestamp);
         if (reading.type === 'acc') {
             this.readingBuffer.push({
                 session_id: this.currentSessionId,
                 reading_type: reading.type,
-                value: JSON.stringify(reading.value)
+                value: JSON.stringify(reading.value),
+                timestamp: reading.timestamp  // ADD THIS!
             });
         } else {
             this.readingBuffer.push({
                 session_id: this.currentSessionId,
                 reading_type: reading.type,
-                value: reading.value
+                value: reading.value,
+                timestamp: reading.timestamp  // ADD THIS!
             });
         }
 
