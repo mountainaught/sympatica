@@ -1,3 +1,4 @@
+// PatientsList.vue
 <template>
   <div class="card shadow-lg border-0 rounded-card" style="flex: 1; overflow: hidden;">
     <div class="card-body p-4 d-flex flex-column h-100">

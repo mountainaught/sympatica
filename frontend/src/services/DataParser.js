@@ -61,7 +61,6 @@ class DataParser {
         }
     }
 
-    // TODO: saving accelerometer as float doesnt work cuz its three different values in one string
     parseAccelerometer(dataView) {
         const readings = AccParser.parse(dataView);
         if (readings) {

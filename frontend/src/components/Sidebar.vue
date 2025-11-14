@@ -1,3 +1,4 @@
+// Sidebar.vue
 <template>
   <div class="card shadow-lg border-0 sidebar-width rounded-card">
     <div class="card-body p-4">

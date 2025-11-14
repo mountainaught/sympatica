@@ -1,3 +1,4 @@
+// App.vue
 <template>
   <div class="vh-100 page-bg p-3">
     <div class="d-flex gap-3 h-100">

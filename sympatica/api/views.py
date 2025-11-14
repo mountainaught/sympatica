@@ -292,11 +292,12 @@ def reading_create(request):
     try:
         body = json.loads(request.body)
         session = Session.objects.get(session_id=body['session_id'])
+        value = str(body.get('value'))
 
         reading = Reading.objects.create(
             session=session,
             reading_type=body['reading_type'],
-            value=float(body['value']),
+            value=value,
         )
 
         return JsonResponse({

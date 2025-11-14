@@ -1,3 +1,4 @@
+// components/home/DeviceStatus.vue
 <template>
   <div class="card shadow-lg border-0 rounded-card">
     <div class="card-body p-3">
@@ -28,6 +29,9 @@
           <button class="btn btn-danger rounded-pill px-4 shadow-sm btn-device-action" @click="stopRecording" :disabled="!isRecording">
             Stop
           </button>
+          <button class="btn btn-secondary rounded-pill px-4 shadow-sm btn-device-action" @click="disconnectDevice" :disabled="!isConnected">
+            Disconnect
+          </button>
         </div>
       </div>
     </div>
@@ -44,7 +48,7 @@ export default {
       isConnected: false,
       isRecording: false,
       deviceName: '',
-      sessionData: null  // Store full session details
+      sessionData: null
     }
   },
   computed: {
@@ -67,7 +71,6 @@ export default {
     }
   },
   async mounted() {
-    // Load session on mount if in URL
     if (this.sessionId) {
       try {
         this.sessionData = await fetchAPI(`/sessions/${this.sessionId}/`);
@@ -108,6 +111,14 @@ export default {
       await BluetoothService.stopReading();
       this.isRecording = false;
       this.$emit('recording-stopped');
+    },
+
+    async disconnectDevice() {
+      await BluetoothService.disconnect();
+      this.isConnected = false;
+      this.isRecording = false;
+      this.deviceName = '';
+      this.$emit('device-disconnected');
     }
   },
   beforeUnmount() {

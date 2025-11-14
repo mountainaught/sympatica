@@ -1,3 +1,4 @@
+// services/parsers/BVPParser.js
 // FIR filter coefficients (from decompiled E4 code)
 const FIR_COEF = [0.05, 0.1, 0.2, 0.3, 0.2, 0.1, 0.05];
 const BVP_SCALE_FACTOR = 10.0;

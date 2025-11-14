@@ -103,7 +103,7 @@ class Reading(models.Model):
             ('acc', 'Accelerometer (3-axis XYZ)'),
         ]
     )
-    value = models.FloatField()
+    value = models.TextField()  # Changed from FloatField to TextField!
     timestamp = models.DateTimeField(auto_now_add=True)
 
     class Meta:

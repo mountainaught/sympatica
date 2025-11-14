@@ -1,3 +1,4 @@
+// PatientsPage.vue
 <template>
   <div class="flex-grow-1 d-flex gap-3 patients-container">
     <PatientsList
@@ -36,10 +37,10 @@
 <script>
 import PatientsList from './PatientsList.vue';
 import SessionsPanel from './SessionsPanel.vue';
-import CreatePatientModal from '../modals/CreatePatientModal.vue';
-import DeleteConfirmModal from '../modals/DeleteConfirmModal.vue';
-import CreateSessionModal from '../modals/CreateSessionModal.vue';
-import DeleteSessionModal from '../modals/DeleteSessionModal.vue';
+import CreatePatientModal from './modals/CreatePatientModal.vue';
+import DeleteConfirmModal from './modals/DeleteConfirmModal.vue';
+import CreateSessionModal from './modals/CreateSessionModal.vue';
+import DeleteSessionModal from './modals/DeleteSessionModal.vue';
 import {deleteAPI, fetchAPI} from '../../utils/helpers.js';
 
 export default {

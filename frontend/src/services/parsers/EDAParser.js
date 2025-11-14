@@ -1,3 +1,4 @@
+// services/parsers/EDAParser.js
 class EDAParser {
     /**
      * Parse EDA/GSR packet from E4
