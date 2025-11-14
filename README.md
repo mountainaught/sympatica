@@ -1,4 +1,4 @@
-# Sympatica: API and Frontend for the Empatetica E4 Wristband
+# Sympatica: API and Frontend for the Empatica E4 Wristband
 For questions or comments you can contact me [here](mailto:e.t.unal@se23.qmul.ac.uk).
 
 
