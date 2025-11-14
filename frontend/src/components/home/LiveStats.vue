@@ -1,4 +1,4 @@
-// components/home/LiveStats.vue
+// components/home/LiveStats.vue (FIXED)
 <template>
   <div class="card shadow-lg border-0 flex-grow-1 rounded-card" style="overflow: hidden;">
     <div class="card-body p-4 d-flex flex-column h-100">
@@ -16,8 +16,8 @@
       <!-- VITALS CARDS -->
       <VitalCards :readings="readings" />
 
-      <!-- LIVE GRAPHS -->
-      <LiveGraphs :readings="readings" />
+      <!-- LIVE GRAPHS - ADD REF, REMOVE PROP -->
+      <LiveGraphs ref="liveGraphs" />
     </div>
   </div>
 </template>
@@ -80,21 +80,27 @@ export default {
     },
 
     handleReading(reading) {
+      // Update vitals display
       switch(reading.type) {
         case 'bvp':
           this.readings.bvp = reading.value.toFixed(2);
           break;
         case 'temperature':
-          this.readings.temperature = reading.value.toFixed(1);
+          this.readings.temperature = reading.value.toFixed(2);
           break;
         case 'eda':
-          this.readings.eda = reading.value.toFixed(2);
+          this.readings.eda = reading.value.toFixed(3);
           break;
         case 'acc':
           this.readings.acc_x = reading.value.x.toFixed(2);
           this.readings.acc_y = reading.value.y.toFixed(2);
           this.readings.acc_z = reading.value.z.toFixed(2);
           break;
+      }
+
+      // Send to LiveGraphs via ref
+      if (this.$refs.liveGraphs && this.$refs.liveGraphs.handleReading) {
+        this.$refs.liveGraphs.handleReading(reading);
       }
     }
   }

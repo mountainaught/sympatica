@@ -261,6 +261,41 @@ def session_end(request, session_id):
         return JsonResponse({'error': 'Session not found'}, status=404)
 
 
+@require_http_methods(["GET"])
+def session_readings(request, session_id):
+    """GET all readings for a session"""
+    try:
+        session = Session.objects.get(session_id=session_id)
+        readings = Reading.objects.filter(session=session).order_by('timestamp')
+
+        # Group by type
+        data = {
+            'bvp': [],
+            'eda': [],
+            'temperature': [],
+            'acc': []
+        }
+
+        for reading in readings:
+            reading_data = {
+                'timestamp': reading.timestamp.isoformat(),
+                'value': reading.value
+            }
+
+            if reading.reading_type in data:
+                data[reading.reading_type].append(reading_data)
+
+        return JsonResponse({
+            'session_id': str(session.session_id),
+            'patient_name': session.patient.full_name,
+            'session_name': session.session_name,
+            'readings': data
+        })
+
+    except Session.DoesNotExist:
+        return JsonResponse({'error': 'Session not found'}, status=404)
+
+
 # ======================================================================
 # ============================== READINGS ==============================
 # ======================================================================
@@ -288,24 +323,31 @@ def reading_listall(request):
 @csrf_exempt
 @require_http_methods(["POST"])
 def reading_create(request):
-    """POST create a new reading"""
+    """POST create multiple readings in batch"""
     try:
         body = json.loads(request.body)
-        session = Session.objects.get(session_id=body['session_id'])
-        value = str(body.get('value'))
+        readings_data = body.get('readings', [])
 
-        reading = Reading.objects.create(
-            session=session,
-            reading_type=body['reading_type'],
-            value=value,
-        )
+        if not readings_data:
+            return JsonResponse({'error': 'No readings provided'}, status=400)
+
+        # Prepare all readings for bulk insert
+        readings_to_create = []
+        for reading_data in readings_data:
+            session = Session.objects.get(session_id=reading_data['session_id'])
+
+            readings_to_create.append(Reading(
+                session=session,
+                reading_type=reading_data['reading_type'],
+                value=str(reading_data.get('value')),
+            ))
+
+        # Bulk create all at once - MUCH faster!
+        created_readings = Reading.objects.bulk_create(readings_to_create)
 
         return JsonResponse({
-            'id': reading.id,
-            'session_id': str(reading.session.session_id),
-            'reading_type': reading.reading_type,
-            'value': reading.value,
-            'timestamp': reading.timestamp.isoformat(),
+            'created': len(created_readings),
+            'message': f'Successfully created {len(created_readings)} readings'
         }, status=201)
 
     except Session.DoesNotExist:

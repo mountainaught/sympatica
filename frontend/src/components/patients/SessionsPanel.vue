@@ -90,6 +90,12 @@
                     <i v-else class="bi bi-circle"></i>
                   </button>
                   <button
+                      class="btn btn-info btn-sm rounded-pill px-3"
+                      @click="viewGraphs(session.session_id)"
+                      title="View graphs">
+                    <i class="bi bi-graph-up"></i> Graphs
+                  </button>
+                  <button
                       class="btn btn-danger btn-sm delete-btn-circular hover-reveal"
                       @click="$emit('delete-session', session)"
                       title="Delete session">
@@ -113,7 +119,7 @@ export default {
   props: {
     patient: Object,
     sessions: Array,
-    activeSessionId: String  // Now a UUID string!
+    activeSessionId: String
   },
   methods: {
     formatDate,
@@ -121,6 +127,9 @@ export default {
     truncateId,
     setActiveSession(sessionId) {
       this.$router.push({ query: { session: sessionId } });
+    },
+    viewGraphs(sessionId) {
+      this.$router.push({ path: '/session', query: { uuid: sessionId } });
     }
   }
 }

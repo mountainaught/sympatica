@@ -24,8 +24,7 @@ class TempParser {
 
             // Convert: Kelvin → Celsius + calibration
             const temp = ((raw * 0.02) - 276.0) + TEMP_CALIBRATION;
-
-            tempReadings.push(Math.round(temp * 100) / 100); // Round to 2 decimals
+            tempReadings.push(Math.round(temp * 1000) / 1000); // 3 decimals
             offset += 2;
         }
 

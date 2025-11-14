@@ -58,12 +58,6 @@ import uPlot from 'uplot';
 import 'uplot/dist/uPlot.min.css';
 
 export default {
-  props: {
-    readings: {
-      type: Object,
-      required: true
-    }
-  },
   data() {
     return {
       charts: {
@@ -80,32 +74,6 @@ export default {
       },
       timeWindow: 60,
       startTime: null
-    }
-  },
-  watch: {
-    'readings.bvp'(newVal) {
-      if (newVal !== null) {
-        this.addDataPoint('bvp', parseFloat(newVal));
-      }
-    },
-    'readings.eda'(newVal) {
-      if (newVal !== null) {
-        this.addDataPoint('eda', parseFloat(newVal));
-      }
-    },
-    'readings.temperature'(newVal) {
-      if (newVal !== null) {
-        this.addDataPoint('temp', parseFloat(newVal));
-      }
-    },
-    'readings.acc_x'(newVal) {
-      if (newVal !== null && this.readings.acc_y !== null && this.readings.acc_z !== null) {
-        this.addAccDataPoint({
-          x: parseFloat(this.readings.acc_x),
-          y: parseFloat(this.readings.acc_y),
-          z: parseFloat(this.readings.acc_z)
-        });
-      }
     }
   },
   mounted() {
@@ -126,10 +94,25 @@ export default {
       return (Date.now() / 1000) - this.startTime;
     },
 
+    handleReading(reading) {
+      switch(reading.type) {
+        case 'bvp':
+          this.addDataPoint('bvp', reading.value, reading.timestamp);
+          break;
+        case 'eda':
+          this.addDataPoint('eda', reading.value, reading.timestamp);
+          break;
+        case 'temperature':
+          this.addDataPoint('temp', reading.value, reading.timestamp);
+          break;
+        case 'acc':
+          this.addAccDataPoint(reading.value, reading.timestamp);
+          break;
+      }
+    },
+
     initializeCharts() {
       const baseOpts = {
-        width: this.$refs.bvpGraph.clientWidth,
-        height: this.$refs.bvpGraph.clientHeight,
         cursor: {
           drag: { x: false, y: false },
           lock: true
@@ -256,14 +239,14 @@ export default {
       }, [[0], [0], [0], [0]], this.$refs.accGraph);
     },
 
-    addDataPoint(type, value) {
-      const now = this.getRelativeTime();
+    addDataPoint(type, value, timestamp) {
+      const time = (new Date(timestamp).getTime() / 1000) - this.startTime;
       const data = this.graphData[type];
 
-      data.times.push(now);
+      data.times.push(time);
       data.values.push(value);
 
-      const cutoff = now - this.timeWindow;
+      const cutoff = time - this.timeWindow;
       while (data.times.length > 0 && data.times[0] < cutoff) {
         data.times.shift();
         data.values.shift();
@@ -274,16 +257,16 @@ export default {
       }
     },
 
-    addAccDataPoint(value) {
-      const now = this.getRelativeTime();
+    addAccDataPoint(value, timestamp) {
+      const time = (new Date(timestamp).getTime() / 1000) - this.startTime;
       const data = this.graphData.acc;
 
-      data.times.push(now);
+      data.times.push(time);
       data.x.push(value.x);
       data.y.push(value.y);
       data.z.push(value.z);
 
-      const cutoff = now - this.timeWindow;
+      const cutoff = time - this.timeWindow;
       while (data.times.length > 0 && data.times[0] < cutoff) {
         data.times.shift();
         data.x.shift();

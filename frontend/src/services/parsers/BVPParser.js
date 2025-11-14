@@ -65,7 +65,7 @@ class BVPParser {
             const filteredKalman = this.applyFIR(this.fir3Buffer);
 
             // === Stage 7: Scale and output ===
-            const bvp = Math.round(-filteredKalman * BVP_SCALE_FACTOR * 100) / 100;
+            const bvp = Math.round(-filteredKalman * BVP_SCALE_FACTOR * 1000) / 1000; // 3 decimals
             bvpReadings.push(bvp);
         }
 

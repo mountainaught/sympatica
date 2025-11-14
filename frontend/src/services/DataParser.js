@@ -1,4 +1,4 @@
-// services/DataParser.js
+// services/DataParser.js (BATCHED - using /readings/create/)
 import BVPParser from './parsers/BVPParser.js';
 import EDAParser from './parsers/EDAParser.js';
 import TempParser from './parsers/TempParser.js';
@@ -8,11 +8,27 @@ import { postAPI } from '../utils/helpers.js';
 class DataParser {
     constructor() {
         this.onDataCallback = null;
-        this.currentSessionId = null; // Now stores UUID string!
+        this.currentSessionId = null;
+
+        // BATCH BUFFER
+        this.readingBuffer = [];
+        this.batchInterval = null;
+        this.BATCH_SIZE = 50; // Send every 50 readings
+        this.BATCH_TIME = 1000; // Or every 1 second
     }
 
     setSession(sessionId) {
-        this.currentSessionId = sessionId; // UUID string
+        this.currentSessionId = sessionId;
+
+        // Start batching when session is active
+        if (sessionId && !this.batchInterval) {
+            this.batchInterval = setInterval(() => this.flushBuffer(), this.BATCH_TIME);
+        } else if (!sessionId && this.batchInterval) {
+            clearInterval(this.batchInterval);
+            this.batchInterval = null;
+            this.flushBuffer(); // Send remaining readings
+        }
+
         console.log('DataParser session set to:', sessionId);
     }
 
@@ -22,14 +38,19 @@ class DataParser {
 
     // ========== PARSER ROUTING ==========
 
+// services/DataParser.js (UPDATE)
+
     parseBVP(dataView) {
         const readings = BVPParser.parse(dataView);
         if (readings) {
-            readings.forEach(value => {
+            const baseTime = Date.now();
+            const sampleInterval = 1000 / 64; // 64 Hz = ~15.6ms between samples
+
+            readings.forEach((value, index) => {
                 this.handleReading({
                     type: 'bvp',
                     value: value,
-                    timestamp: new Date().toISOString()
+                    timestamp: new Date(baseTime + (index * sampleInterval)).toISOString()
                 });
             });
         }
@@ -38,11 +59,14 @@ class DataParser {
     parseEDA(dataView) {
         const readings = EDAParser.parse(dataView);
         if (readings) {
-            readings.forEach(value => {
+            const baseTime = Date.now();
+            const sampleInterval = 1000 / 4; // 4 Hz = 250ms between samples
+
+            readings.forEach((value, index) => {
                 this.handleReading({
                     type: 'eda',
                     value: value,
-                    timestamp: new Date().toISOString()
+                    timestamp: new Date(baseTime + (index * sampleInterval)).toISOString()
                 });
             });
         }
@@ -51,11 +75,14 @@ class DataParser {
     parseTemperature(dataView) {
         const readings = TempParser.parse(dataView);
         if (readings) {
-            readings.forEach(value => {
+            const baseTime = Date.now();
+            const sampleInterval = 1000 / 4; // 4 Hz = 250ms between samples
+
+            readings.forEach((value, index) => {
                 this.handleReading({
                     type: 'temperature',
                     value: value,
-                    timestamp: new Date().toISOString()
+                    timestamp: new Date(baseTime + (index * sampleInterval)).toISOString()
                 });
             });
         }
@@ -64,11 +91,14 @@ class DataParser {
     parseAccelerometer(dataView) {
         const readings = AccParser.parse(dataView);
         if (readings) {
-            readings.forEach(({ x, y, z }) => {
+            const baseTime = Date.now();
+            const sampleInterval = 1000 / 32; // 32 Hz = ~31.25ms between samples
+
+            readings.forEach(({ x, y, z }, index) => {
                 this.handleReading({
                     type: 'acc',
                     value: { x, y, z },
-                    timestamp: new Date().toISOString()
+                    timestamp: new Date(baseTime + (index * sampleInterval)).toISOString()
                 });
             });
         }
@@ -76,39 +106,52 @@ class DataParser {
 
     // ========== READING HANDLER ==========
 
-    async handleReading(reading) {
+    handleReading(reading) {
         // 1. Update UI (send to LiveStats)
         if (this.onDataCallback) {
             this.onDataCallback(reading);
         }
 
-        // 2. Save to database (if session active)
+        // 2. Buffer for database (if session active)
         if (this.currentSessionId) {
-            await this.saveReading(reading);
+            this.bufferReading(reading);
         }
     }
 
-    async saveReading(reading) {
-        try {
-            // For accelerometer, save as JSON string
-            if (reading.type === 'acc') {
-                await postAPI('/readings/create/', {
-                    session_id: this.currentSessionId, // UUID string
-                    reading_type: reading.type,
-                    value: JSON.stringify(reading.value) // {x, y, z} as string
-                });
-                return;
-            }
-
-            // For other sensors, save value directly
-            await postAPI('/readings/create/', {
-                session_id: this.currentSessionId, // UUID string
+    bufferReading(reading) {
+        // Add to buffer
+        if (reading.type === 'acc') {
+            this.readingBuffer.push({
+                session_id: this.currentSessionId,
+                reading_type: reading.type,
+                value: JSON.stringify(reading.value)
+            });
+        } else {
+            this.readingBuffer.push({
+                session_id: this.currentSessionId,
                 reading_type: reading.type,
                 value: reading.value
             });
+        }
 
+        // Flush if buffer is full
+        if (this.readingBuffer.length >= this.BATCH_SIZE) {
+            this.flushBuffer();
+        }
+    }
+
+    async flushBuffer() {
+        if (this.readingBuffer.length === 0) return;
+
+        const batch = [...this.readingBuffer];
+        this.readingBuffer = [];
+
+        try {
+            // Send batch to /readings/create/
+            await postAPI('/readings/create/', { readings: batch });
+            // console.log(`Saved ${batch.length} readings`);
         } catch (error) {
-            console.error('Error saving reading:', error);
+            console.error('Error saving batch:', error);
         }
     }
 }
