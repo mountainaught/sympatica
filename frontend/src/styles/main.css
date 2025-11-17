@@ -219,3 +219,29 @@ tr:hover .hover-reveal, .hover-parent:hover .hover-reveal { opacity: 1; }
     .page-bg { background: white !important; }
     .card { box-shadow: none !important; border: 1px solid #dee2e6 !important; }
 }
+/* ================== ACCORDION ================== */
+.accordion-button {
+    transition: all var(--transition-medium);
+}
+
+.accordion-button::after {
+    transition: transform var(--transition-medium);
+}
+
+.accordion-enter-active,
+.accordion-leave-active {
+    transition: all var(--transition-medium);
+    overflow: hidden;
+}
+
+.accordion-enter-from,
+.accordion-leave-to {
+    max-height: 0;
+    opacity: 0;
+}
+
+.accordion-enter-to,
+.accordion-leave-from {
+    max-height: 200px;
+    opacity: 1;
+}

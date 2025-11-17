@@ -1,4 +1,4 @@
-// SessionsPanel.vue - FIXED
+// SessionsPanel.vue - WITH ACCORDION
 <template>
   <div class="card shadow-lg border-0 rounded-card" style="flex: 1; overflow: hidden;">
     <div class="card-body p-4 d-flex flex-column h-100">
@@ -23,22 +23,42 @@
 
       <!-- Patient selected -->
       <div v-else class="flex-grow-1 d-flex flex-column">
-        <!-- Patient Info -->
-        <div class="card bg-light border-0 rounded-3 mb-3 p-3">
-          <h5 class="fw-bold mb-2">{{ patient.full_name }}</h5>
-          <div class="row small text-muted">
-            <div class="col-6">
-              <strong>ID:</strong> {{ truncateId(patient.patient_id) }}...
-            </div>
-            <div class="col-6">
-              <strong>Age:</strong> {{ patient.age }}
-            </div>
-            <div class="col-6">
-              <strong>DOB:</strong> {{ patient.date_of_birth }}
-            </div>
-            <div class="col-6">
-              <strong>Sessions:</strong> {{ sessions.length }}
-            </div>
+        <!-- Patient Info Accordion -->
+        <div class="accordion mb-3" id="patientInfoAccordion">
+          <div class="accordion-item border-0 rounded-3 bg-light">
+            <h2 class="accordion-header">
+              <button
+                  class="accordion-button bg-light rounded-3 fw-bold"
+                  :class="{ collapsed: !isAccordionOpen }"
+                  type="button"
+                  @click="isAccordionOpen = !isAccordionOpen"
+                  aria-controls="patientInfoCollapse">
+                {{ patient.full_name }}
+              </button>
+            </h2>
+            <transition name="accordion">
+              <div
+                  v-show="isAccordionOpen"
+                  id="patientInfoCollapse"
+                  class="accordion-collapse">
+                <div class="accordion-body pt-2">
+                  <div class="row small text-muted">
+                    <div class="col-6">
+                      <strong>ID:</strong> {{ patient.patient_id }}
+                    </div>
+                    <div class="col-6">
+                      <strong>Age:</strong> {{ patient.age }}
+                    </div>
+                    <div class="col-6">
+                      <strong>DOB:</strong> {{ patient.date_of_birth }}
+                    </div>
+                    <div class="col-6">
+                      <strong>Sessions:</strong> {{ sessions.length }}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </transition>
           </div>
         </div>
 
@@ -123,6 +143,11 @@ export default {
     patient: Object,
     sessions: Array,
     activeSessionId: String
+  },
+  data() {
+    return {
+      isAccordionOpen: false
+    }
   },
   methods: {
     formatDate,

@@ -32,33 +32,50 @@
       </div>
 
       <template v-else>
-        <div class="card-body p-4 d-flex flex-column h-100">
-          <div v-if="!loading" class="row g-3 flex-grow-1 min-height-zero">
-            <div class="col-md-6 d-flex flex-column">
-              <div class="graph-container bg-white border rounded-3 p-3 flex-grow-1">
-                <h5 class="fw-semibold mb-3">BVP</h5>
-                <div ref="bvpGraph" class="session-graph-plot"></div>
+        <!-- Graph Grid -->
+        <div class="d-flex flex-column gap-3 flex-grow-1 p-3" style="min-height: 0;">
+          <!-- Top Row -->
+          <div class="row g-3 flex-grow-1" style="min-height: 0;">
+            <div class="col-md-6 d-flex flex-column" style="min-height: 0;">
+              <div class="graph-container bg-white border rounded-3 p-3 flex-grow-1 d-flex flex-column" style="min-height: 0;">
+                <div class="graph-header mb-2">
+                  <span class="fw-semibold text-dark">BVP</span>
+                  <span class="text-muted small ms-2">Blood Volume Pulse</span>
+                </div>
+                <div ref="bvpGraph" class="flex-grow-1" style="min-height: 0;"></div>
               </div>
             </div>
 
-            <div class="col-md-6 d-flex flex-column">
-              <div class="graph-container bg-white border rounded-3 p-3 flex-grow-1">
-                <h5 class="fw-semibold mb-3">EDA</h5>
-                <div ref="edaGraph" class="session-graph-plot"></div>
+            <div class="col-md-6 d-flex flex-column" style="min-height: 0;">
+              <div class="graph-container bg-white border rounded-3 p-3 flex-grow-1 d-flex flex-column" style="min-height: 0;">
+                <div class="graph-header mb-2">
+                  <span class="fw-semibold text-dark">EDA</span>
+                  <span class="text-muted small ms-2">Electrodermal Activity</span>
+                </div>
+                <div ref="edaGraph" class="flex-grow-1" style="min-height: 0;"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bottom Row -->
+          <div class="row g-3 flex-grow-1" style="min-height: 0;">
+            <div class="col-md-6 d-flex flex-column" style="min-height: 0;">
+              <div class="graph-container bg-white border rounded-3 p-3 flex-grow-1 d-flex flex-column" style="min-height: 0;">
+                <div class="graph-header mb-2">
+                  <span class="fw-semibold text-dark">Temperature</span>
+                  <span class="text-muted small ms-2">Skin Surface</span>
+                </div>
+                <div ref="tempGraph" class="flex-grow-1" style="min-height: 0;"></div>
               </div>
             </div>
 
-            <div class="col-md-6 d-flex flex-column">
-              <div class="graph-container bg-white border rounded-3 p-3 flex-grow-1">
-                <h5 class="fw-semibold mb-3">Temperature</h5>
-                <div ref="tempGraph" class="session-graph-plot"></div>
-              </div>
-            </div>
-
-            <div class="col-md-6 d-flex flex-column">
-              <div class="graph-container bg-white border rounded-3 p-3 flex-grow-1">
-                <h5 class="fw-semibold mb-3">Accelerometer</h5>
-                <div ref="accGraph" class="session-graph-plot"></div>
+            <div class="col-md-6 d-flex flex-column" style="min-height: 0;">
+              <div class="graph-container bg-white border rounded-3 p-3 flex-grow-1 d-flex flex-column" style="min-height: 0;">
+                <div class="graph-header mb-2">
+                  <span class="fw-semibold text-dark">Acceleration</span>
+                  <span class="text-muted small ms-2">3-Axis Motion</span>
+                </div>
+                <div ref="accGraph" class="flex-grow-1" style="min-height: 0;"></div>
               </div>
             </div>
           </div>
