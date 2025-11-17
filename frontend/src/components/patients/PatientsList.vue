@@ -1,16 +1,32 @@
 // PatientsList.vue
+// components/patients/PatientsList.vue
 <template>
   <div class="card shadow-lg border-0 rounded-card" style="flex: 1; overflow: hidden;">
     <div class="card-body p-4 d-flex flex-column h-100">
+      <!-- Only show header when there are patients -->
       <div class="d-flex justify-content-between align-items-center mb-3 pb-3">
         <h3 class="fw-bold mb-0">Patients</h3>
-        <button class="btn btn-primary btn-sm rounded-pill px-3" @click="$emit('create-patient')">
+        <!-- Hide button when empty -->
+        <button v-if="patients.length > 0" class="btn btn-primary btn-sm rounded-pill px-3" @click="$emit('create-patient')">
           + New Patient
         </button>
       </div>
 
       <div class="flex-grow-1 overflow-auto hide-scrollbar">
-        <table class="table table-hover table-custom mb-0">
+        <!-- Empty State -->
+        <div v-if="patients.length === 0" class="empty-state">
+          <i class="bi bi-person-plus empty-state-icon"></i>
+          <h5 class="empty-state-title">No patients yet</h5>
+          <p class="empty-state-text">
+            Get started by creating your first patient record
+          </p>
+          <button class="btn btn-primary rounded-pill px-4 empty-state-action" @click="$emit('create-patient')">
+            <i class="bi bi-plus-lg me-2"></i>Create Patient
+          </button>
+        </div>
+
+        <!-- Patients Table -->
+        <table v-else class="table table-hover table-custom mb-0">
           <thead class="sticky-top bg-white">
           <tr class="border-bottom">
             <th class="text-muted small fw-semibold py-2">NAME</th>
@@ -35,7 +51,8 @@
               </div>
             </td>
             <td class="align-middle py-2 text-end">
-              <span class="badge bg-light text-dark rounded-pill px-2">
+              <span class="badge bg-light text-dark rounded-pill px-3">
+                <i class="bi bi-folder2-open me-1"></i>
                 {{ patient.session_count }}
               </span>
             </td>
@@ -50,10 +67,6 @@
           </tr>
           </tbody>
         </table>
-
-        <div v-if="patients.length === 0" class="text-center text-muted py-5">
-          <p>No patients found</p>
-        </div>
       </div>
     </div>
   </div>

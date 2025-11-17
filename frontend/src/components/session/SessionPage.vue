@@ -1,4 +1,4 @@
-// components/session/SessionGraphsPage.vue
+// components/session/SessionPage.vue
 <template>
   <div class="flex-grow-1 d-flex flex-column gap-3">
     <div class="card shadow-lg border-0 rounded-card">
@@ -15,44 +15,55 @@
       </div>
     </div>
 
-    <div class="card shadow-lg border-0 flex-grow-1 rounded-card" style="overflow: hidden;">
-      <div class="card-body p-4 d-flex flex-column h-100">
-        <div v-if="loading" class="text-center py-5">
-          <div class="spinner-border text-primary" role="status">
-            <span class="visually-hidden">Loading...</span>
-          </div>
-        </div>
+    <div class="card shadow-lg border-0 flex-grow-1 rounded-card session-graphs-card">
+      <LoadingSpinner :show="loading" message="Loading session data..." />
 
-        <div v-else class="row g-3 flex-grow-1" style="min-height: 0;">
-          <div class="col-md-6 d-flex flex-column">
-            <div class="graph-container bg-white border rounded-3 p-3 flex-grow-1">
-              <h5 class="fw-semibold mb-3">BVP</h5>
-              <div ref="bvpGraph" style="width: 100%; height: 400px;"></div>
-            </div>
-          </div>
-
-          <div class="col-md-6 d-flex flex-column">
-            <div class="graph-container bg-white border rounded-3 p-3 flex-grow-1">
-              <h5 class="fw-semibold mb-3">EDA</h5>
-              <div ref="edaGraph" style="width: 100%; height: 400px;"></div>
-            </div>
-          </div>
-
-          <div class="col-md-6 d-flex flex-column">
-            <div class="graph-container bg-white border rounded-3 p-3 flex-grow-1">
-              <h5 class="fw-semibold mb-3">Temperature</h5>
-              <div ref="tempGraph" style="width: 100%; height: 400px;"></div>
-            </div>
-          </div>
-
-          <div class="col-md-6 d-flex flex-column">
-            <div class="graph-container bg-white border rounded-3 p-3 flex-grow-1">
-              <h5 class="fw-semibold mb-3">Accelerometer</h5>
-              <div ref="accGraph" style="width: 100%; height: 400px;"></div>
-            </div>
-          </div>
+      <div v-if="!hasData" class="col-12">
+        <div class="empty-state">
+          <i class="bi bi-graph-down empty-state-icon"></i>
+          <h5 class="empty-state-title">No data recorded</h5>
+          <p class="empty-state-text">
+            This session doesn't have any recorded data yet. Start recording to see graphs here.
+          </p>
+          <button class="btn btn-primary rounded-pill px-4 empty-state-action" @click="$router.push({ path: '/home', query: $route.query })">
+            <i class="bi bi-arrow-left me-2"></i>Go to Home
+          </button>
         </div>
       </div>
+
+      <template v-else>
+        <div class="card-body p-4 d-flex flex-column h-100">
+          <div v-if="!loading" class="row g-3 flex-grow-1 min-height-zero">
+            <div class="col-md-6 d-flex flex-column">
+              <div class="graph-container bg-white border rounded-3 p-3 flex-grow-1">
+                <h5 class="fw-semibold mb-3">BVP</h5>
+                <div ref="bvpGraph" class="session-graph-plot"></div>
+              </div>
+            </div>
+
+            <div class="col-md-6 d-flex flex-column">
+              <div class="graph-container bg-white border rounded-3 p-3 flex-grow-1">
+                <h5 class="fw-semibold mb-3">EDA</h5>
+                <div ref="edaGraph" class="session-graph-plot"></div>
+              </div>
+            </div>
+
+            <div class="col-md-6 d-flex flex-column">
+              <div class="graph-container bg-white border rounded-3 p-3 flex-grow-1">
+                <h5 class="fw-semibold mb-3">Temperature</h5>
+                <div ref="tempGraph" class="session-graph-plot"></div>
+              </div>
+            </div>
+
+            <div class="col-md-6 d-flex flex-column">
+              <div class="graph-container bg-white border rounded-3 p-3 flex-grow-1">
+                <h5 class="fw-semibold mb-3">Accelerometer</h5>
+                <div ref="accGraph" class="session-graph-plot"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </template>
     </div>
   </div>
 </template>
@@ -60,8 +71,12 @@
 <script>
 import Plotly from 'plotly.js-dist-min';
 import { fetchAPI } from '../../utils/helpers.js';
+import LoadingSpinner from '../../utils/Loading.vue';
 
 export default {
+  components: {
+    LoadingSpinner
+  },
   data() {
     return {
       sessionData: null,
@@ -71,6 +86,11 @@ export default {
   computed: {
     sessionId() {
       return this.$route.query.uuid;
+    },
+    hasData() {
+      if (!this.sessionData?.readings) return false;
+      const { bvp, eda, temperature, acc } = this.sessionData.readings;
+      return (bvp?.length > 0 || eda?.length > 0 || temperature?.length > 0 || acc?.length > 0);
     }
   },
   async mounted() {
@@ -81,14 +101,17 @@ export default {
       try {
         const data = await fetchAPI(`/sessions/${this.sessionId}/readings/`);
         this.sessionData = data;
-        console.log('Session Data:', data);
 
         this.$nextTick(() => {
           this.renderGraphs(data.readings);
         });
       } catch (error) {
         console.error('Error loading session data:', error);
-        alert('Failed to load session data');
+        window.$toast.addToast({
+          title: 'Load Failed',
+          message: 'Failed to load session data',
+          type: 'error'
+        });
       } finally {
         this.loading = false;
       }

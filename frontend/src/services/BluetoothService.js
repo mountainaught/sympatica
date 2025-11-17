@@ -1,5 +1,6 @@
 // services/BluetoothService.js
 import DataParser from './DataParser.js';
+import deviceStatus from "../components/home/DeviceStatus.vue";
 
 // E4 BLE Characteristic UUIDs
 const DEVICE_NAME = 'Empatica E4 43d011';
@@ -17,7 +18,6 @@ class BluetoothService {
         this.device = null;
         this.server = null;
         this.isConnected = false;
-        this.deviceName = '';
         this.characteristics = {};
     }
 
@@ -69,7 +69,7 @@ class BluetoothService {
     getConnectionStatus() {
         return {
             isConnected: this.isConnected,
-            deviceName: this.deviceName
+            deviceName: this.device.name
         };
     }
     

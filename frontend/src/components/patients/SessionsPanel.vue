@@ -1,4 +1,4 @@
-// SessionsPanel.vue
+// SessionsPanel.vue - FIXED
 <template>
   <div class="card shadow-lg border-0 rounded-card" style="flex: 1; overflow: hidden;">
     <div class="card-body p-4 d-flex flex-column h-100">
@@ -13,11 +13,12 @@
       </div>
 
       <!-- No patient selected -->
-      <div v-if="!patient" class="flex-grow-1 d-flex align-items-center justify-content-center text-muted">
-        <div class="text-center">
-          <i class="bi bi-person-circle" style="font-size: 4rem;"></i>
-          <p class="mt-3">Choose a patient to view sessions</p>
-        </div>
+      <div v-if="!patient" class="empty-state flex-grow-1">
+        <i class="bi bi-person-circle empty-state-icon"></i>
+        <h5 class="empty-state-title">No patient selected</h5>
+        <p class="empty-state-text">
+          Select a patient from the list to view their sessions
+        </p>
       </div>
 
       <!-- Patient selected -->
@@ -43,15 +44,22 @@
 
         <!-- Sessions List -->
         <div class="flex-grow-1 overflow-auto hide-scrollbar">
-          <div v-if="sessions.length === 0" class="text-center text-muted py-5">
-            No sessions yet
+          <!-- Empty State for Sessions -->
+          <div v-if="sessions.length === 0" class="empty-state" style="min-height: 300px;">
+            <i class="bi bi-clipboard-data empty-state-icon"></i>
+            <h5 class="empty-state-title">No sessions yet</h5>
+            <p class="empty-state-text">
+              Click the "+ New Session" button above to start recording physiological data
+            </p>
           </div>
+
+          <!-- Sessions Table -->
           <table v-else class="table table-hover table-custom mb-0">
             <thead class="sticky-top bg-white">
             <tr class="border-bottom">
               <th class="text-muted small fw-semibold py-2">SESSION</th>
-              <th class="text-muted small fw-semibold py-2 text-end">DURATION</th>
-              <th class="text-muted small fw-semibold py-2 text-end" style="width: 80px;"></th>
+              <th class="text-muted small fw-semibold py-2 text-end">READINGS</th>
+              <th class="text-muted small fw-semibold py-2 text-end" style="width: 180px;"></th>
             </tr>
             </thead>
             <tbody>
@@ -66,17 +74,12 @@
                   <small class="text-muted font-mono-small">
                     {{ formatDate(session.started_at) }}
                   </small>
-                  <small class="text-muted">
-                    {{ session.reading_count }} readings
-                  </small>
                 </div>
               </td>
               <td class="align-middle py-2 text-end">
-                <span v-if="session.duration_seconds" class="badge bg-secondary rounded-pill">
-                  {{ formatDuration(session.duration_seconds) }}
-                </span>
-                <span v-else class="badge bg-success rounded-pill">
-                  Active
+                <span class="badge bg-light text-dark rounded-pill px-3">
+                  <i class="bi bi-activity me-1"></i>
+                  {{ session.reading_count }}
                 </span>
               </td>
               <td class="align-middle py-2 text-end">
@@ -93,7 +96,7 @@
                       class="btn btn-info btn-sm rounded-pill px-3"
                       @click="viewGraphs(session.session_id)"
                       title="View graphs">
-                    <i class="bi bi-graph-up"></i> Graphs
+                    <i class="bi bi-graph-up"></i>
                   </button>
                   <button
                       class="btn btn-danger btn-sm delete-btn-circular hover-reveal"
@@ -113,7 +116,7 @@
 </template>
 
 <script>
-import { formatDate, formatDuration, truncateId } from '../../utils/helpers.js';
+import { formatDate, truncateId } from '../../utils/helpers.js';
 
 export default {
   props: {
@@ -123,7 +126,6 @@ export default {
   },
   methods: {
     formatDate,
-    formatDuration,
     truncateId,
     setActiveSession(sessionId) {
       this.$router.push({ query: { session: sessionId } });

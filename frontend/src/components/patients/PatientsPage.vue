@@ -1,6 +1,8 @@
 // PatientsPage.vue
 <template>
   <div class="flex-grow-1 d-flex gap-3 patients-container">
+    <Loading :show="loading" message="Loading patients..." />
+
     <PatientsList
         :patients="patients"
         :selectedPatientId="selectedPatient?.patient_id"
@@ -41,6 +43,7 @@ import CreatePatientModal from './modals/CreatePatientModal.vue';
 import DeleteConfirmModal from './modals/DeleteConfirmModal.vue';
 import CreateSessionModal from './modals/CreateSessionModal.vue';
 import DeleteSessionModal from './modals/DeleteSessionModal.vue';
+import Loading from '../../utils/Loading.vue';
 import {deleteAPI, fetchAPI} from '../../utils/helpers.js';
 
 export default {
@@ -50,21 +53,22 @@ export default {
     CreatePatientModal,
     DeleteConfirmModal,
     CreateSessionModal,
-    DeleteSessionModal
+    DeleteSessionModal,
+    Loading
   },
   computed: {
     activeSession() {
       const sessionId = this.$route.query.session;
       if (!sessionId) return null;
-      const session = this.sessions.find(s => s.session_id === sessionId);
-      return session;
+      return this.sessions.find(s => s.session_id === sessionId);
     }
   },
   data() {
     return {
       patients: [],
       selectedPatient: null,
-      sessions: []
+      sessions: [],
+      loading: false
     }
   },
   mounted() {
@@ -72,6 +76,7 @@ export default {
   },
   methods: {
     async loadPatients() {
+      this.loading = true;
       try {
         this.patients = await fetchAPI('/patients/');
 
@@ -81,6 +86,8 @@ export default {
         }
       } catch (error) {
         console.error('Error loading patients:', error);
+      } finally {
+        this.loading = false;
       }
     },
 
@@ -114,12 +121,21 @@ export default {
           this.selectedPatient = null;
           this.sessions = [];
         }
+
+        window.$toast.addToast({
+          title: 'Patient Deleted',
+          message: 'Patient record has been removed',
+          type: 'success'
+        });
       } catch (error) {
         console.error('Error deleting patient:', error);
-        alert('Failed to delete patient');
+        window.$toast.addToast({
+          title: 'Delete Failed',
+          message: 'Failed to delete patient',
+          type: 'error'
+        });
       }
     },
-
     async onPatientCreated() {
       await this.loadPatients();
     },
@@ -143,9 +159,19 @@ export default {
 
         await this.loadSessions(this.selectedPatient.patient_id);
         await this.loadPatients();
+
+        window.$toast.addToast({
+          title: 'Session Deleted',
+          message: 'Session has been removed',
+          type: 'success'
+        });
       } catch (error) {
         console.error('Error deleting session:', error);
-        alert('Failed to delete session');
+        window.$toast.addToast({
+          title: 'Delete Failed',
+          message: 'Failed to delete session',
+          type: 'error'
+        });
       }
     },
 

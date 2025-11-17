@@ -235,7 +235,7 @@ export default {
             grid: { show: true, stroke: '#e9ecef', width: 1 }
           }
         ],
-        legend: { show: true }
+        legend: { show: false }
       }, [[0], [0], [0], [0]], this.$refs.accGraph);
     },
 

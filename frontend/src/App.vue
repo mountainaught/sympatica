@@ -4,26 +4,36 @@
     <div class="d-flex gap-3 h-100">
       <Sidebar />
       <div class="flex-grow-1 d-flex" style="min-width: 0;">
-        <router-view/>
+        <transition name="fade" mode="out-in">
+          <router-view :key="$route.path" />
+        </transition>
       </div>
     </div>
+
+    <!-- Toast Container -->
+    <Toast ref="toast" />
   </div>
 </template>
 
 <script>
 import Sidebar from './components/Sidebar.vue';
+import Toast from './utils/Toast.vue';
 
 export default {
   components: {
-    Sidebar
+    Sidebar,
+    Toast
   },
   created() {
-    // Force clear URL query params
     const cleanPath = window.location.pathname;
     if (window.location.search) {
       window.history.replaceState({}, '', cleanPath);
       this.$router.replace({ path: cleanPath });
     }
+  },
+  mounted() {
+    // Make toast globally accessible
+    window.$toast = this.$refs.toast;
   }
 }
 </script>

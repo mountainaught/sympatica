@@ -1,7 +1,7 @@
 // components/home/LiveStats.vue (FIXED)
 <template>
-  <div class="card shadow-lg border-0 flex-grow-1 rounded-card" style="overflow: hidden;">
-    <div class="card-body p-4 d-flex flex-column h-100">
+  <div class="card shadow-lg border-0 flex-grow-1 rounded-card" style="overflow: auto; min-height: 0;">
+    <div class="card-body p-4 d-flex flex-column">
       <!-- HEADER -->
       <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
         <h2 class="fw-bold mb-0 text-dark">Physiological Monitoring</h2>

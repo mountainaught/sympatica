@@ -26,7 +26,7 @@ class DataParser {
         } else if (!sessionId && this.batchInterval) {
             clearInterval(this.batchInterval);
             this.batchInterval = null;
-            this.flushBuffer(); // Send remaining readings
+            this.flushBuffer().then(); // Send remaining readings
         }
 
         console.log('DataParser session set to:', sessionId);
@@ -138,7 +138,7 @@ class DataParser {
 
         // Flush if buffer is full
         if (this.readingBuffer.length >= this.BATCH_SIZE) {
-            this.flushBuffer();
+            this.flushBuffer().then();
         }
     }
 

@@ -1,51 +1,73 @@
-// CreatePatientModal.vue
 <template>
   <div class="modal fade" id="createPatientModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content rounded-card">
-        <div class="modal-header border-0 pb-0">
-          <h5 class="modal-title fw-bold">Create New Patient</h5>
+        <div class="modal-header border-0">
+          <h5 class="modal-title fw-bold">
+            <i class="bi bi-person-plus-fill me-2 text-primary"></i>
+            Create New Patient
+          </h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
 
-        <div class="modal-body p-4">
-          <form @submit.prevent="handleSubmit">
+        <div class="modal-body" style="position: relative;">
+          <LoadingSpinner :show="loading" message="Creating patient..." />
+
+          <form @submit.prevent="handleSubmit" :class="{ 'opacity-50': loading }">
             <div class="mb-3">
-              <label class="form-label fw-semibold">First Name</label>
+              <label class="form-label fw-semibold">
+                <i class="bi bi-person me-1"></i>
+                First Name
+              </label>
               <input
                   v-model="formData.first_name"
                   type="text"
                   class="form-control rounded-pill"
-                  required>
+                  placeholder="Enter first name"
+                  required
+                  :disabled="loading">
             </div>
 
             <div class="mb-3">
-              <label class="form-label fw-semibold">Last Name</label>
+              <label class="form-label fw-semibold">
+                <i class="bi bi-person me-1"></i>
+                Last Name
+              </label>
               <input
                   v-model="formData.last_name"
                   type="text"
                   class="form-control rounded-pill"
-                  required>
+                  placeholder="Enter last name"
+                  required
+                  :disabled="loading">
             </div>
 
             <div class="mb-3">
-              <label class="form-label fw-semibold">Date of Birth</label>
+              <label class="form-label fw-semibold">
+                <i class="bi bi-calendar-event me-1"></i>
+                Date of Birth
+              </label>
               <input
                   v-model="formData.date_of_birth"
                   type="date"
                   class="form-control rounded-pill"
-                  required>
+                  required
+                  :disabled="loading">
             </div>
 
-            <div v-if="error" class="alert alert-danger rounded-3" role="alert">
+            <div v-if="error" class="alert alert-danger rounded-3 d-flex align-items-center" role="alert">
+              <i class="bi bi-exclamation-triangle-fill me-2"></i>
               {{ error }}
             </div>
 
-            <div class="d-flex gap-2 justify-content-end mt-4">
-              <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">
+            <div class="modal-footer-actions">
+              <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal" :disabled="loading">
+                <i class="bi bi-x-lg me-1"></i>
                 Cancel
               </button>
               <button type="submit" class="btn btn-primary rounded-pill px-4" :disabled="loading">
+                <span v-if="loading" class="spinner-border spinner-border-sm me-2"></span>
+                <i v-else class="bi bi-check-lg me-1"></i>
                 {{ loading ? 'Creating...' : 'Create Patient' }}
               </button>
             </div>
@@ -59,8 +81,12 @@
 <script>
 import { Modal } from 'bootstrap';
 import { postAPI } from '../../../utils/helpers.js';
+import LoadingSpinner from '../../../utils/Loading.vue';
 
 export default {
+  components: {
+    LoadingSpinner
+  },
   data() {
     return {
       formData: {
@@ -104,6 +130,11 @@ export default {
         this.$emit('patient-created', data);
         this.hide();
         this.resetForm();
+        window.$toast.addToast({
+          title: 'Patient Created',
+          message: `${data.full_name} has been added successfully`,
+          type: 'success'
+        });
       } catch (error) {
         console.error('Error creating patient:', error);
         this.error = 'Failed to create patient. Please try again.';
