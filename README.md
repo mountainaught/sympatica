@@ -58,5 +58,3 @@ python sympatica/manage.py runserver 8000
 ```
 ### Known issues
 * Bluetooth connection management is a bit messy, disconnect between sessions or readings get jumbled up.
-* Some screen elements get cut off on smaller resolutions.
-* Alignment between elements is crooked.
