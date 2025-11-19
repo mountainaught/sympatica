@@ -8,17 +8,15 @@
             <i class="bi" :class="isConnected ? 'bi-bluetooth' : 'bi-bluetooth-slash'"></i>
             <span class="ms-2">{{ isConnected ? 'Device Connected' : 'No Device' }}</span>
           </span>
-
-                  <span v-if="isConnected" class="badge rounded-pill fs-6 bg-light text-dark badge-device">
+          <span v-if="isConnected" class="badge rounded-pill fs-6 bg-light text-dark badge-device">
             <i class="bi bi-cpu me-2"></i>
             {{ deviceName }}
           </span>
-
-                  <span v-if="sessionData" class="badge rounded-pill fs-6 bg-info text-dark badge-session">
+          <span v-if="sessionData" class="badge rounded-pill fs-6 bg-info text-dark badge-session">
             <i class="bi bi-clipboard-data me-2"></i>
             {{ sessionData.patient_name }} - {{ sessionData.session_name || 'Unnamed' }}
           </span>
-                  <span v-else class="badge rounded-pill fs-6 bg-warning text-dark badge-session">
+          <span v-else class="badge rounded-pill fs-6 bg-warning text-dark badge-session">
             <i class="bi bi-exclamation-triangle me-2"></i>
             No Active Session
           </span>
@@ -63,28 +61,16 @@ export default {
       return this.$route.query.session || null;
     }
   },
-  watch: {
-    async sessionId(newSessionId) {
-      if (newSessionId) {
-        try {
-          this.sessionData = await fetchAPI(`/sessions/${newSessionId}/`);
-        } catch (error) {
-          console.error('Error loading session:', error);
-          this.sessionData = null;
-        }
-      } else {
-        this.sessionData = null;
-      }
-    }
-  },
   async mounted() {
-    // Check if already connected
-    const status = BluetoothService.getConnectionStatus();
-    if (status.isConnected) {
-      this.isConnected = true;
-      console.log(status.deviceName, 'is connected');
-      this.deviceName = status.deviceName;
-    }
+    // check if already connected
+    try {
+      const status = BluetoothService.getConnectionStatus();
+      if (status.isConnected) {
+        this.isConnected = true;
+        console.log(status.deviceName, 'is connected');
+        this.deviceName = status.deviceName;
+      }
+    } catch (error) {} // if we havent connected yet error is expected
 
     // Load session if in URL
     if (this.sessionId) {
