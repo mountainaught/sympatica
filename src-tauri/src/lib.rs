@@ -16,7 +16,6 @@ fn greet(name: &str) -> String {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    // Initialize app state
     let app_state = AppState {
         ble_manager: Arc::new(Mutex::new(BleManager::new())),
         csv_writer: Arc::new(Mutex::new(None)),
@@ -28,9 +27,12 @@ pub fn run() {
         .manage(app_state)
         .invoke_handler(tauri::generate_handler![
             greet,
+            commands::scan_for_devices,
             commands::connect_device,
             commands::disconnect_device,
             commands::is_connected,
+            commands::start_streaming,
+            commands::stop_streaming,
             commands::start_session,
             commands::stop_session,
         ])

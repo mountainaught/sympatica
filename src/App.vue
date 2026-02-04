@@ -1,39 +1,89 @@
-// App.vue
 <template>
-  <div class="vh-100 page-bg p-3">
-    <div class="d-flex gap-3 h-100">
-      <Sidebar />
-      <div class="flex-grow-1 d-flex" style="min-width: 0;">
-        <transition name="fade" mode="out-in">
-          <router-view :key="$route.path" />
-        </transition>
-      </div>
-    </div>
+  <div v-if="!isConnected" class="h-screen">
+    <ConnectionScreen @device-connected="handleConnection" />
+  </div>
 
-    <!-- Toast Container -->
-    <Toast ref="toast" />
+  <div v-else class="flex h-screen overflow-hidden">
+    <Sidebar
+        :current-page="currentPage"
+        :device-info="deviceInfo"
+        :is-streaming="isStreaming"
+        @navigate="currentPage = $event"
+        @reconnect="handleReconnect"
+        @toggle-streaming="toggleStreaming"
+    />
+
+    <main class="flex-1 overflow-hidden">
+      <component :is="currentComponent" :is-streaming="isStreaming" />
+    </main>
   </div>
 </template>
 
 <script>
-import Sidebar from './components/Sidebar.vue';
-import Toast from './utils/Toast.vue';
+import { invoke } from '@tauri-apps/api/core'
+import Sidebar from './components/Sidebar.vue'
+import ConnectionScreen from './components/ConnectionScreen.vue'
+import ReadingsPage from './components/readings/ReadingsPage.vue'
+import PatientsPage from './components/patients/PatientsPage.vue'
+import SettingsPage from './components/settings/SettingsPage.vue'
 
 export default {
   components: {
     Sidebar,
-    Toast
+    ConnectionScreen,
+    ReadingsPage,
+    PatientsPage,
+    SettingsPage
   },
-  created() {
-    const cleanPath = window.location.pathname;
-    if (window.location.search) {
-      window.history.replaceState({}, '', cleanPath);
-      this.$router.replace({ path: cleanPath });
+  data() {
+    return {
+      currentPage: 'readings',
+      isConnected: false,
+      isStreaming: false,
+      deviceInfo: null
     }
   },
-  mounted() {
-    // Make toast globally accessible
-    window.$toast = this.$refs.toast;
+  computed: {
+    currentComponent() {
+      const pages = {
+        readings: 'ReadingsPage',
+        patients: 'PatientsPage',
+        settings: 'SettingsPage'
+      }
+      return pages[this.currentPage]
+    }
+  },
+  methods: {
+    handleConnection(device) {
+      this.deviceInfo = device
+      this.isConnected = true
+      console.log('Device connected:', device)
+    },
+
+    handleReconnect() {
+      this.isConnected = false
+      this.isStreaming = false
+      this.deviceInfo = null
+    },
+
+    async toggleStreaming() {
+      try {
+        if (this.isStreaming) {
+          console.log('Calling stop_streaming...')
+          await invoke('stop_streaming')
+          this.isStreaming = false
+          console.log('Streaming stopped')
+        } else {
+          console.log('Calling start_streaming...')
+          await invoke('start_streaming')
+          this.isStreaming = true
+          console.log('Streaming started successfully')
+        }
+      } catch (err) {
+        console.error('Streaming toggle failed:', err)
+        alert('Streaming error: ' + err)
+      }
+    }
   }
 }
 </script>

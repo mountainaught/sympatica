@@ -1,8 +1,6 @@
 // BLE UUIDs for Empatica E4
 use uuid::Uuid;
 
-pub const DEVICE_NAME: &str = "Empatica E4";
-
 // Services
 pub const CMD_SERVICE_UUID: Uuid = Uuid::from_u128(0x00003e70_0000_1000_8000_00805f9b34fb);
 pub const SENSOR_SERVICE_UUID: Uuid = Uuid::from_u128(0x00003ea0_0000_1000_8000_00805f9b34fb);

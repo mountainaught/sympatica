@@ -1,0 +1,137 @@
+@import "tailwindcss";
+
+/* ==================== COLOR PALETTE ==================== */
+/* Corporate medical aesthetic - clean, professional, emotionless */
+@theme {
+    /* Primary Brand - desaturated professional blue */
+    --color-brand: #005a9c;
+    --color-brand-hover: #004a82;
+    --color-brand-light: #f0f7ff;
+
+    /* Semantic Colors - muted professional tones */
+    --color-success: #0f7a3a;
+    --color-danger: #c42b1c;
+    --color-warning: #ca5010;
+    --color-info: #0078d4;
+
+    /* Backgrounds - flat greys */
+    --color-bg-app: #f3f3f3;
+    --color-bg-surface: #ffffff;
+    --color-bg-hover: #f9f9f9;
+    --color-bg-active: #e5e5e5;
+
+    /* Borders - subtle */
+    --color-border-default: #d1d1d1;
+    --color-border-strong: #8a8a8a;
+    --color-border-accent: var(--color-brand);
+
+    /* Text - high contrast */
+    --color-text-primary: #242424;
+    --color-text-secondary: #605e5c;
+    --color-text-muted: #8a8886;
+    --color-text-inverse: #ffffff;
+
+    /* States */
+    --color-state-connected: #0f7a3a;
+    --color-state-disconnected: #8a8886;
+    --color-state-recording: #c42b1c;
+    --color-state-idle: #605e5c;
+
+    /* Sensor Colors - distinct but professional */
+    --color-sensor-bvp: #c42b1c;
+    --color-sensor-eda: #0078d4;
+    --color-sensor-temp: #ca5010;
+    --color-sensor-acc-x: #0f7a3a;
+    --color-sensor-acc-y: #107c10;
+    --color-sensor-acc-z: #00b7c3;
+
+    /* Gradients - minimal */
+    --gradient-bg-connection: linear-gradient(135deg, #3b3b3b 0%, #2d5a6e 100%);
+}
+
+/* ==================== UTILITY CLASSES ==================== */
+@layer utilities {
+    /* Text */
+    .text-primary { color: var(--color-text-primary); }
+    .text-secondary { color: var(--color-text-secondary); }
+    .text-muted { color: var(--color-text-muted); }
+    .text-inverse { color: var(--color-text-inverse); }
+    .text-brand { color: var(--color-brand); }
+
+    /* Backgrounds */
+    .bg-app { background-color: var(--color-bg-app); }
+    .bg-surface { background-color: var(--color-bg-surface); }
+    .bg-brand { background-color: var(--color-brand); }
+
+    /* Borders */
+    .border-default { border-color: var(--color-border-default); }
+    .border-strong { border-color: var(--color-border-strong); }
+
+    /* Buttons - flat corporate style */
+    .btn {
+        padding: 6px 16px;
+        font-size: 14px;
+        font-weight: 600;
+        border: 1px solid transparent;
+        transition: background-color 0.1s, border-color 0.1s;
+        cursor: pointer;
+    }
+
+    .btn:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+    }
+
+    .btn-primary {
+        background-color: var(--color-brand);
+        color: var(--color-text-inverse);
+        border-color: var(--color-brand);
+    }
+
+    .btn-primary:hover:not(:disabled) {
+        background-color: var(--color-brand-hover);
+    }
+
+    .btn-secondary {
+        background-color: var(--color-bg-surface);
+        color: var(--color-text-primary);
+        border-color: var(--color-border-default);
+    }
+
+    .btn-secondary:hover:not(:disabled) {
+        background-color: var(--color-bg-hover);
+        border-color: var(--color-border-strong);
+    }
+
+    /* Cards - flat with subtle borders */
+    .card {
+        background-color: var(--color-bg-surface);
+        border: 1px solid var(--color-border-default);
+    }
+
+    /* Status */
+    .status-connected { color: var(--color-state-connected); }
+    .status-disconnected { color: var(--color-state-disconnected); }
+    .status-recording { color: var(--color-state-recording); }
+}
+
+/* ==================== ANIMATIONS ==================== */
+/* Minimal animations only */
+@keyframes heartbeat {
+    0%, 100% { transform: scale(1); }
+    10%, 30% { transform: scale(1.05); }
+    20%, 40% { transform: scale(1); }
+}
+
+.animate-heartbeat {
+    animation: heartbeat 2s infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.animate-spin {
+    animation: spin 1s linear infinite;
+}

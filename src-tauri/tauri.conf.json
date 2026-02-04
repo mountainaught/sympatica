@@ -12,9 +12,13 @@
   "app": {
     "windows": [
       {
-        "title": "sympatica",
-        "width": 800,
-        "height": 600
+        "title": "Sympatica E4 Monitor",
+        "width": 1280,
+        "height": 800,
+        "minWidth": 1024,
+        "minHeight": 768,
+        "resizable": true,
+        "center": true
       }
     ],
     "security": {
