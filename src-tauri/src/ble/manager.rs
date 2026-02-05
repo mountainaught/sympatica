@@ -1,15 +1,14 @@
-use btleplug::api::{
-    Central, Manager as _, Peripheral as _, ScanFilter, WriteType, Characteristic,
-};
-use btleplug::platform::{Adapter, Manager, Peripheral};
+// src/ble/manager.rs
+use bluest::{Adapter, Device, Characteristic};
 use std::error::Error;
 use std::time::Duration;
 use tokio::time;
 use crate::ble::constants::*;
+use futures::StreamExt;
 
 pub struct BleManager {
     adapter: Option<Adapter>,
-    device: Option<Peripheral>,
+    device: Option<Device>,
     characteristics: Option<DeviceCharacteristics>,
 }
 
@@ -30,74 +29,87 @@ impl BleManager {
         }
     }
 
-    // Helper to reuse the adapter connection
     async fn get_adapter(&mut self) -> Result<Adapter, Box<dyn Error>> {
         if let Some(adapter) = &self.adapter {
             return Ok(adapter.clone());
         }
 
-        let manager = Manager::new().await?;
-        let adapters = manager.adapters().await?;
-        let adapter = adapters.into_iter().next()
+        let adapter = Adapter::default().await
             .ok_or("No Bluetooth adapter found")?;
+
+        adapter.wait_available().await?;
 
         self.adapter = Some(adapter.clone());
         Ok(adapter)
     }
 
-    // CHANGED: Now accepts `device_id` to ensure we connect to the right device
     pub async fn scan_and_connect(&mut self, device_id: &str) -> Result<String, Box<dyn Error>> {
         let adapter = self.get_adapter().await?;
-        adapter.start_scan(ScanFilter::default()).await?;
-        time::sleep(Duration::from_secs(2)).await;
 
-        let peripherals = adapter.peripherals().await?;
-
-        // Find device by matching address from properties
+        let mut scan = adapter.scan(&[]).await?;
         let mut target_device = None;
-        for p in peripherals {
-            if let Ok(Some(props)) = p.properties().await {
-                if props.address.to_string() == device_id {
-                    target_device = Some(p);
+
+        let timeout = time::sleep(Duration::from_secs(5));
+        tokio::pin!(timeout);
+
+        loop {
+            tokio::select! {
+                Some(discovered) = scan.next() => {
+                    let addr_str = discovered.device.id().to_string();
+                    if addr_str == device_id {
+                        target_device = Some(discovered.device);
+                        break;
+                    }
+                }
+                _ = &mut timeout => {
                     break;
                 }
             }
         }
 
-        let device = target_device.ok_or(format!("Device {} not found", device_id))?;
+        let device = target_device.ok_or(format!("Device {} not found during scan", device_id))?;
 
-        let _ = adapter.stop_scan().await;
+        // Connect via adapter, not device
+        adapter.connect_device(&device).await?;
 
-        // Connect
-        device.connect().await?;
-        device.discover_services().await?;
+        time::sleep(Duration::from_millis(500)).await;
 
-        let services = device.services();
+        // Discover services
+        let services = device.discover_services().await?;
+
+        // Find sensor service
         let sensor_service = services.iter()
-            .find(|s| s.uuid == SENSOR_SERVICE_UUID)
+            .find(|s| s.uuid() == SENSOR_SERVICE_UUID)
             .ok_or("Sensor service not found")?;
+
+        // Find command service
         let cmd_service = services.iter()
-            .find(|s| s.uuid == CMD_SERVICE_UUID)
+            .find(|s| s.uuid() == CMD_SERVICE_UUID)
             .ok_or("Command service not found")?;
 
-        let bvp = sensor_service.characteristics.iter()
-            .find(|c| c.uuid == BVP_CHAR_UUID)
+        // Get characteristics from sensor service
+        let sensor_chars = sensor_service.characteristics().await?;
+        let bvp = sensor_chars.iter()
+            .find(|c| c.uuid() == BVP_CHAR_UUID)
             .ok_or("BVP characteristic not found")?
             .clone();
-        let eda = sensor_service.characteristics.iter()
-            .find(|c| c.uuid == EDA_CHAR_UUID)
+        let eda = sensor_chars.iter()
+            .find(|c| c.uuid() == EDA_CHAR_UUID)
             .ok_or("EDA characteristic not found")?
             .clone();
-        let temp = sensor_service.characteristics.iter()
-            .find(|c| c.uuid == TEMP_CHAR_UUID)
+        let temp = sensor_chars.iter()
+            .find(|c| c.uuid() == TEMP_CHAR_UUID)
             .ok_or("TEMP characteristic not found")?
             .clone();
-        let acc = sensor_service.characteristics.iter()
-            .find(|c| c.uuid == ACC_CHAR_UUID)
+        let acc = sensor_chars.iter()
+            .find(|c| c.uuid() == ACC_CHAR_UUID)
             .ok_or("ACC characteristic not found")?
             .clone();
-        let cmd = cmd_service.characteristics.iter()
-            .find(|c| c.uuid == CMD_CHAR_UUID)
+
+        // Get command characteristic
+        let cmd_chars = cmd_service.characteristics().await?;
+        let cmd = cmd_chars.iter()
+            .find(|c| c.uuid() == CMD_CHAR_UUID)
             .ok_or("CMD characteristic not found")?
             .clone();
 
@@ -107,13 +119,11 @@ impl BleManager {
 
         self.device = Some(device.clone());
 
-        // Get the name for return
-        let props = device.properties().await?;
-        let local_name = props
-            .and_then(|p| p.local_name)
-            .unwrap_or_else(|| "Empatica E4".to_string());
+        // Get device name (NOT async in bluest)
+        let name = device.name()
+            .unwrap_or_else(|_| "Empatica E4".to_string());
 
-        Ok(local_name)
+        Ok(name)
     }
 
     pub fn is_connected(&self) -> bool {
@@ -121,50 +131,54 @@ impl BleManager {
     }
 
     pub async fn disconnect(&mut self) -> Result<(), Box<dyn Error>> {
-        if let Some(device) = &self.device {
-            device.disconnect().await?;
+        // In bluest, disconnection happens when Device is dropped
+        // or via adapter.disconnect_device()
+        if let (Some(adapter), Some(device)) = (&self.adapter, &self.device) {
+            let _ = adapter.disconnect_device(device).await;
         }
         self.device = None;
         self.characteristics = None;
         Ok(())
     }
 
-    pub fn get_device(&self) -> Option<Peripheral> {
-        self.device.clone()
+    pub fn get_characteristics(&self) -> Option<DeviceCharacteristics> {
+        self.characteristics.clone()
     }
 
     pub async fn start_streaming(&self) -> Result<(), Box<dyn Error>> {
-        let device = self.device.as_ref().ok_or("Device not connected")?;
         let chars = self.characteristics.as_ref().ok_or("Characteristics not initialized")?;
-
-        device.subscribe(&chars.bvp).await?;
-        device.subscribe(&chars.eda).await?;
-        device.subscribe(&chars.temp).await?;
-        device.subscribe(&chars.acc).await?;
 
         let timestamp = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)?
-            .as_secs() as u32; // Changed from f64/default to u32 for E4 protocol
+            .as_secs() as u32;
 
-        // E4 protocol: 0x01 followed by 4-byte timestamp
         let mut command = vec![0x01];
         command.extend_from_slice(&timestamp.to_le_bytes());
 
-        device.write(&chars.cmd, &command, WriteType::WithoutResponse).await?;
+        println!("[BLE] Command: {:?}", command);
 
+        // WAIT A BIT - let notifications fully enable on device side
+        tokio::time::sleep(tokio::time::Duration::from_millis(500)).await;
+
+        chars.cmd.write_without_response(&command).await?;
+
+        println!("[BLE] Command sent");
         Ok(())
     }
-
+    
     pub async fn stop_streaming(&self) -> Result<(), Box<dyn Error>> {
-        let device = self.device.as_ref().ok_or("Device not connected")?;
-        let chars = self.characteristics.as_ref().ok_or("Characteristics not initialized")?;
-
-        // Best effort unsubscribe
-        let _ = device.unsubscribe(&chars.bvp).await;
-        let _ = device.unsubscribe(&chars.eda).await;
-        let _ = device.unsubscribe(&chars.temp).await;
-        let _ = device.unsubscribe(&chars.acc).await;
-
         Ok(())
+    }
+}
+
+impl Clone for DeviceCharacteristics {
+    fn clone(&self) -> Self {
+        Self {
+            bvp: self.bvp.clone(),
+            eda: self.eda.clone(),
+            temp: self.temp.clone(),
+            acc: self.acc.clone(),
+            cmd: self.cmd.clone(),
+        }
     }
 }

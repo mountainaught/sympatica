@@ -1,3 +1,4 @@
+<!-- src/components/readings/ReadingsPage.vue -->
 <template>
   <div class="h-full bg-app p-6 overflow-auto">
     <div class="bg-surface border border-default p-4 mb-6">
